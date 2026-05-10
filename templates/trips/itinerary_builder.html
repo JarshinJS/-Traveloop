@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Builder: {{ trip.name }} — Traveloop{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="itineraryBuilder()">
+    
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+            <p class="font-body text-[10px] uppercase tracking-widest text-gold mb-1 flex items-center gap-2">
+                <a href="{% url 'trip_detail' trip.pk %}" class="hover:text-[var(--gold-light)]">&larr; Back to Overview</a>
+            </p>
+            <h1 class="font-display text-4xl font-light text-[var(--text-primary)]">Itinerary Builder</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <button @click="showAddStopModal = true" class="btn-primary !px-6 shadow-[0_0_20px_rgba(232,168,56,0.2)]">
+                + Add Stop
+            </button>
+            <a href="{% url 'itinerary_view' trip.pk %}" class="btn-ghost">View Final &rarr;</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-200px)] min-h-[600px]">
+        
+        <!-- LEFT: ITINERARY TIMELINE (7 cols) -->
+        <div class="lg:col-span-7 bg-[var(--ink-card)] rounded-[var(--radius-xl)] border border-[var(--ink-border)] flex flex-col overflow-hidden">
+            <div class="p-6 border-b border-[var(--ink-border)] bg-black/5 dark:bg-white/5">
+                <h3 class="font-body text-xs uppercase tracking-widest text-[var(--text-primary)] flex items-center gap-2">
+                    <span class="text-teal">🗺️</span> Route Timeline
+                </h3>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6" id="stops-container">
+                {% for stop in stops %}
+                <div class="card p-6 mb-6 last:mb-0 relative border border-[var(--ink-border)]" data-stop-id="{{ stop.id }}">
+                    <!-- Stop Header -->
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h4 class="font-display text-3xl font-medium text-[var(--text-primary)]">{{ stop.city.name }}</h4>
+                            <p class="font-mono text-[10px] text-[var(--text-muted)] mt-1">{{ stop.arrival_date|date:"M d" }} — {{ stop.departure_date|date:"M d" }}</p>
+                        </div>
+                        <button class="text-red-500 hover:bg-[rgba(239,68,68,0.1)] p-2 rounded-lg transition-colors" @click="removeStop({{ stop.id }})">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Drop Zone for Activities -->
+                    <div class="activity-dropzone min-h-[100px] border-2 border-dashed border-[var(--ink-border)] rounded-[var(--radius-lg)] p-4 transition-colors"
+                         data-stop-id="{{ stop.id }}">
+                        
+                        {% for ta in stop.trip_activities.all %}
+                        <div class="activity-card glass p-4 rounded-[var(--radius-md)] mb-3 flex items-center justify-between group cursor-grab active:cursor-grabbing border border-[var(--ink-border)]"
+                             data-ta-id="{{ ta.id }}">
+                            <div class="flex items-center gap-4 truncate">
+                                <span class="text-[var(--text-muted)] cursor-grab">⋮⋮</span>
+                                <div class="truncate">
+                                    <h5 class="font-medium text-sm text-[var(--text-primary)] truncate">{{ ta.activity.name }}</h5>
+                                    <p class="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">{{ ta.activity.get_category_display }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 flex-shrink-0 pl-2">
+                                <span class="font-mono text-[10px] text-gold">${{ ta.activity.estimated_cost|floatformat:0 }}</span>
+                                <button class="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1" @click="removeActivity({{ ta.id }})">&times;</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="empty-placeholder text-center text-[var(--text-muted)] py-6 text-sm pointer-events-none" {% if stop.trip_activities.exists %}style="display:none;"{% endif %}>
+                            Drag activities here
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state h-full justify-center border-none">
+                    <span class="text-6xl opacity-30 mb-4">📍</span>
+                    <h3 class="font-display text-2xl mb-2 text-[var(--text-primary)]">No stops yet.</h3>
+                    <p class="text-sm text-[var(--text-muted)] mb-6">Add a destination to start building your itinerary.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- RIGHT: ACTIVITY POOL (5 cols) -->
+        <div class="lg:col-span-5 bg-[var(--ink-card)] rounded-[var(--radius-xl)] border border-[var(--ink-border)] flex flex-col overflow-hidden">
+            <div class="p-6 border-b border-[var(--ink-border)] bg-black/5 dark:bg-white/5">
+                <h3 class="font-body text-xs uppercase tracking-widest text-[var(--text-primary)] flex items-center justify-between">
+                    <span class="flex items-center gap-2"><span class="text-gold">🎯</span> Activity Pool</span>
+                    <a href="{% url 'activity_search' %}" target="_blank" class="text-[10px] text-teal hover:text-[#6366F1] transition-colors">Browse All &rarr;</a>
+                </h3>
+            </div>
+            
+            <div class="p-4 border-b border-[var(--ink-border)]">
+                <input type="text" x-model="searchQuery" class="input-field !py-2 !text-sm" placeholder="Search activities...">
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 space-y-3" id="activity-pool">
+                <!-- Fetch these via alpine or render them directly if passed in context, 
+                     assuming all Activities or a filtered list is available. We will mock the pool for now 
+                     and rely on a fetch or data. Let's just render the ones for the current cities or popular ones. -->
+                     
+                <!-- We don't have 'available_activities' in context for this view based on views.py, 
+                     so we will show a button to add custom activities or suggest browsing -->
+                <div class="empty-state border-dashed border-[var(--ink-border)] py-8 px-4 rounded-[var(--radius-lg)]">
+                    <p class="text-sm text-[var(--text-primary)] text-center mb-4">Find things to do and drag them into your stops.</p>
+                    <a href="{% url 'activity_search' %}?trip={{ trip.id }}" class="btn-primary !py-2 !px-4 text-xs">Search Activities</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Stop Modal -->
+    <div x-show="showAddStopModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="showAddStopModal = false"></div>
+        <div class="glass rounded-[var(--radius-xl)] p-8 max-w-md w-full relative z-10 border border-[var(--ink-border)] shadow-2xl">
+            <h3 class="font-display text-3xl font-medium mb-6">Add Destination</h3>
+            <form @submit.prevent="addStop" class="space-y-5">
+                <div class="form-group">
+                    <label class="form-label text-[10px]">City</label>
+                    <select x-model="newStop.city" class="input-field" required>
+                        <option value="">Select a city...</option>
+                        {% for city in cities %}
+                        <option value="{{ city.id }}">{{ city.name }}, {{ city.country }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label text-[10px]">Arrival</label>
+                        <input type="date" x-model="newStop.arrival_date" class="input-field" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label text-[10px]">Departure</label>
+                        <input type="date" x-model="newStop.departure_date" class="input-field" required>
+                    </div>
+                </div>
+                <div class="flex gap-4 pt-4">
+                    <button type="button" @click="showAddStopModal = false" class="btn-ghost flex-1">Cancel</button>
+                    <button type="submit" class="btn-primary flex-1">Add Stop</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function itineraryBuilder() {
+        return {
+            showAddStopModal: false,
+            searchQuery: '',
+            newStop: { city: '', arrival_date: '', departure_date: '' },
+            
+            async addStop() {
+                const formData = new FormData();
+                formData.append('city', this.newStop.city);
+                formData.append('arrival_date', this.newStop.arrival_date);
+                formData.append('departure_date', this.newStop.departure_date);
+                
+                try {
+                    const res = await postForm(`{% url 'add_stop' trip.pk %}`, formData);
+                    if (res.status === 'ok') {
+                        location.reload(); // Quickest way to reflect changes and re-init sortable
+                    } else {
+                        alert('Error adding stop: ' + JSON.stringify(res.errors));
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+            
+            async removeStop(stopId) {
+                if(!confirm('Are you sure you want to remove this stop and all its activities?')) return;
+                try {
+                    const res = await fetch(`/trips/stops/${stopId}/remove/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCsrfToken() }
+                    });
+                    if (res.ok) {
+                        document.querySelector(`div[data-stop-id="${stopId}"]`).remove();
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+            
+            async removeActivity(taId) {
+                try {
+                    const res = await fetch(`/trips/trip-activities/${taId}/remove/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': getCsrfToken() }
+                    });
+                    if (res.ok) {
+                        const el = document.querySelector(`div[data-ta-id="${taId}"]`);
+                        const container = el.parentElement;
+                        el.remove();
+                        if(container.querySelectorAll('.activity-card').length === 0) {
+                            container.querySelector('.empty-placeholder').style.display = 'block';
+                        }
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            },
+            
+            init() {
+                // Initialize Sortable on dropzones if Sortable is loaded
+                if (typeof Sortable !== 'undefined') {
+                    document.querySelectorAll('.activity-dropzone').forEach(zone => {
+                        new Sortable(zone, {
+                            group: 'activities',
+                            animation: 150,
+                            ghostClass: 'opacity-50',
+                            onAdd: function (evt) {
+                                // Logic to handle activity dropped from pool would go here
+                                evt.to.querySelector('.empty-placeholder').style.display = 'none';
+                            },
+                            onRemove: function (evt) {
+                                if(evt.from.querySelectorAll('.activity-card').length === 0) {
+                                    evt.from.querySelector('.empty-placeholder').style.display = 'block';
+                                }
+                            }
+                        });
+                    });
+                }
+            }
+        }
+    }
+</script>
+{% endblock %}
+{% endblock %}

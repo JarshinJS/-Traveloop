@@ -1,68 +1,140 @@
 {% extends 'base.html' %}
-{% block title %}Sign Up{% endblock %}
+{% load static %}
+
+{% block title %}Sign Up — Traveloop{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-4" style="background: linear-gradient(135deg, #0a5c5c 0%, #0D6E6E 40%, #1A9494 100%);">
-    <div class="w-full max-w-md">
-        <!-- Logo -->
-        <div class="text-center mb-8">
-            <h1 class="font-heading text-4xl text-white mb-2">🌍 Traveloop</h1>
-            <p class="text-teal-200 text-lg">Start your journey today</p>
+<div class="fixed inset-0 flex">
+    
+    <!-- Left Panel: Animated Map -->
+    <div class="hidden lg:flex lg:w-1/2 h-screen relative bg-[var(--ink)] overflow-hidden items-center justify-center">
+        <!-- SVG Map Background -->
+        <svg class="absolute inset-0 w-full h-full text-[var(--ink)]-border opacity-30" viewBox="0 0 1000 600" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M100,200 Q200,100 300,300 T500,200 T700,400 T900,100" />
+            <path d="M50,400 Q150,500 250,300 T450,400 T650,200 T850,500" />
+            <path d="M200,100 Q400,200 600,100 T900,300" />
+        </svg>
+
+        <!-- Animated Glowing Dots -->
+        <div class="absolute" style="top: 30%; left: 45%;">
+            <div class="w-3 h-3 bg-[var(--gold)] rounded-full dot-pulse relative"></div>
+            <span class="absolute top-4 left-4 text-[var(--text-muted)] font-mono text-xs uppercase tracking-widest float-label">Paris</span>
+        </div>
+        <div class="absolute" style="top: 50%; left: 70%;">
+            <div class="w-3 h-3 bg-[var(--teal)] rounded-full dot-pulse relative"></div>
+            <span class="absolute top-4 left-4 text-[var(--text-muted)] font-mono text-xs uppercase tracking-widest float-label" style="animation-delay: 1s;">Tokyo</span>
+        </div>
+        <div class="absolute" style="top: 60%; left: 20%;">
+            <div class="w-3 h-3 bg-[#6366F1] rounded-full dot-pulse relative"></div>
+            <span class="absolute top-4 left-4 text-[var(--text-muted)] font-mono text-xs uppercase tracking-widest float-label" style="animation-delay: 2s;">New York</span>
         </div>
 
-        <!-- Signup Card -->
-        <div class="card" style="border-radius: 1rem;">
-            <div class="card-body" style="padding: 2rem;">
-                <h2 class="font-heading text-2xl text-center mb-6" style="color: var(--color-text);">Create Account</h2>
+        <div class="absolute bottom-12 left-12 z-10 max-w-md">
+            <h2 class="font-display text-4xl font-light text-[var(--text-primary)] leading-tight">
+                <em class="text-gold not-italic">Start your</em> journey.
+            </h2>
+        </div>
+        
+        <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[var(--ink)] to-transparent"></div>
+    </div>
 
-                <form method="post" id="signup-form">
-                    {% csrf_token %}
+    <!-- Right Panel: Signup Form -->
+    <div class="w-full lg:w-1/2 h-screen overflow-y-auto flex flex-col p-8 relative z-10">
+        
+        <div class="flex-1 min-h-[2rem]"></div>
+        <!-- Glass Card -->
+        <div class="glass rounded-[var(--radius-xl)] p-10 w-full max-w-md relative mx-auto flex-shrink-0">
+            
+            <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--teal)] opacity-[0.03] rounded-full blur-[60px] pointer-events-none"></div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="id_username">👤 Username</label>
-                        {{ form.username }}
-                        {% if form.username.errors %}
-                            <p class="form-error">{{ form.username.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="id_email">📧 Email</label>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                            <p class="form-error">{{ form.email.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="id_password1">🔒 Password</label>
-                        {{ form.password1 }}
-                        {% if form.password1.errors %}
-                            <p class="form-error">{{ form.password1.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="id_password2">🔒 Confirm Password</label>
-                        {{ form.password2 }}
-                        {% if form.password2.errors %}
-                            <p class="form-error">{{ form.password2.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-
-                    <button type="submit" class="btn btn-accent btn-lg w-full mt-4" id="signup-btn">
-                        Create Account →
-                    </button>
-                </form>
-
-                <div class="mt-6 text-center">
-                    <p style="color: var(--color-text-muted); font-size: 0.9rem;">
-                        Already have an account? 
-                        <a href="{% url 'login' %}" class="font-semibold" style="color: var(--color-primary);">Login</a>
-                    </p>
+            <div class="text-center mb-8">
+                <div class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center mb-6"
+                     style="background: linear-gradient(135deg, #0ECFB1, #6366F1);">
+                    <span class="text-[var(--ink)] font-bold text-2xl">T</span>
                 </div>
+                <h1 class="font-display text-3xl font-light mb-2">Create Account</h1>
+                <p class="font-body text-xs uppercase tracking-wider text-[var(--text-muted)]">Join Traveloop today</p>
+            </div>
+
+            <form method="post" class="space-y-5" x-data="{
+                pwd1: '', pwd2: '',
+                get match() { return this.pwd1 && this.pwd1 === this.pwd2; },
+                get strength() {
+                    let s = 0;
+                    if (this.pwd1.length >= 8) s += 25;
+                    if (this.pwd1.match(/[A-Z]/)) s += 25;
+                    if (this.pwd1.match(/[0-9]/)) s += 25;
+                    if (this.pwd1.match(/[^A-Za-z0-9]/)) s += 25;
+                    return s;
+                }
+            }">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    {{ form.username }}
+                    <label class="form-label-floating">Username</label>
+                    {% if form.username.errors %}<p class="text-xs text-red-500 mt-1">{{ form.username.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.email }}
+                    <label class="form-label-floating">Email</label>
+                    {% if form.email.errors %}<p class="text-xs text-red-500 mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.password1 }}
+                    <label class="form-label-floating">Password</label>
+                    {% if form.password1.errors %}<p class="text-xs text-red-500 mt-1">{{ form.password1.errors.0 }}</p>{% endif %}
+                    
+                    <!-- Strength meter -->
+                    <div class="mt-2 h-1 w-full bg-[var(--ink-border)] rounded-full overflow-hidden" x-show="pwd1.length > 0">
+                        <div class="h-full transition-all duration-300"
+                             :class="{
+                                 'bg-[var(--danger)]': strength <= 25,
+                                 'bg-[var(--warning)]': strength === 50,
+                                 'bg-[var(--success)]': strength >= 75
+                             }"
+                             :style="`width: ${strength}%`"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    {{ form.password2 }}
+                    <label class="form-label-floating">Confirm Password</label>
+                    <p class="text-xs mt-1" x-show="pwd2.length > 0" :class="match ? 'text-[var(--success)]' : 'text-red-500'" x-text="match ? 'Passwords match' : 'Passwords do not match'"></p>
+                    {% if form.password2.errors %}<p class="text-xs text-red-500 mt-1">{{ form.password2.errors.0 }}</p>{% endif %}
+                </div>
+
+                <button type="submit" class="btn-primary w-full mt-6">
+                    Create Account
+                </button>
+            </form>
+
+            <div class="mt-8 text-center">
+                <p class="text-sm text-[var(--text-muted)]">
+                    Already have an account? 
+                    <a href="{% url 'login' %}" class="text-teal hover:text-[#6366F1] font-medium transition-colors ml-1">Log In &rarr;</a>
+                </p>
             </div>
         </div>
+        <div class="flex-1 min-h-[2rem]"></div>
+
     </div>
+
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
+        inputs.forEach(input => {
+            input.classList.add('input-field');
+            input.setAttribute('placeholder', ' ');
+            
+            // Add x-model bindings to password fields
+            if (input.name === 'password1') input.setAttribute('x-model', 'pwd1');
+            if (input.name === 'password2') input.setAttribute('x-model', 'pwd2');
+        });
+    });
+</script>
 {% endblock %}

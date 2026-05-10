@@ -1,20 +1,33 @@
 {% extends 'base.html' %}
-{% block title %}Delete {{ trip.name }}{% endblock %}
+{% load static %}
+
+{% block title %}Delete {{ trip.name }}? — Traveloop{% endblock %}
+
 {% block content %}
-<div class="max-w-lg mx-auto mt-12 fade-in">
-    <div class="card">
-        <div class="card-body" style="padding: 2rem; text-align: center;">
-            <span class="text-5xl mb-4 block">⚠️</span>
-            <h2 class="font-heading text-2xl mb-2">Delete Trip</h2>
-            <p class="mb-6" style="color: var(--color-text-muted);">
-                Are you sure you want to delete <strong>"{{ trip.name }}"</strong>?<br>
-                This will remove all stops, activities, packing items, and notes.
+<div class="max-w-lg mx-auto mt-20 fade-in">
+    <div class="glass p-10 rounded-[var(--radius-xl)] border border-[rgba(239,68,68,0.3)] shadow-[0_0_40px_rgba(239,68,68,0.1)] text-center relative overflow-hidden">
+        
+        <!-- Warning Background Effect -->
+        <div class="absolute inset-0 bg-gradient-to-t from-[rgba(239,68,68,0.05)] to-transparent pointer-events-none"></div>
+        
+        <div class="relative z-10">
+            <span class="text-6xl mb-6 block animate-pulse">⚠️</span>
+            <h2 class="font-display text-4xl font-light text-[var(--text-primary)] mb-4">Delete Journey</h2>
+            
+            <p class="font-body text-sm text-[var(--text-muted)] mb-8 leading-relaxed">
+                Are you absolutely sure you want to abandon <strong class="text-red-500">"{{ trip.name }}"</strong>?<br>
+                This action is permanent and will erase all associated destinations, activities, packing lists, and journal entries.
             </p>
+            
             <form method="post">
                 {% csrf_token %}
-                <div class="flex items-center justify-center gap-3">
-                    <a href="{% url 'trip_detail' pk=trip.pk %}" class="btn btn-outline">Cancel</a>
-                    <button type="submit" class="btn btn-danger">🗑️ Delete Forever</button>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="{% url 'trip_detail' pk=trip.pk %}" class="btn-ghost w-full sm:w-auto">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn-primary !bg-[var(--danger)] !border-[var(--danger)] hover:!bg-[rgba(239,68,68,0.8)] shadow-[0_0_20px_rgba(239,68,68,0.2)] w-full sm:w-auto">
+                        Erase Forever
+                    </button>
                 </div>
             </form>
         </div>

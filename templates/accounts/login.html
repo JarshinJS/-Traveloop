@@ -1,52 +1,108 @@
 {% extends 'base.html' %}
-{% block title %}Login{% endblock %}
+{% load static %}
+
+{% block title %}Log In — Traveloop{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-4" style="background: linear-gradient(135deg, #0a5c5c 0%, #0D6E6E 40%, #1A9494 100%);">
-    <div class="w-full max-w-md">
-        <!-- Logo -->
-        <div class="text-center mb-8">
-            <h1 class="font-heading text-4xl text-white mb-2">🌍 Traveloop</h1>
-            <p class="text-teal-200 text-lg">Welcome back, traveler!</p>
+<div class="fixed inset-0 flex">
+    
+    <!-- Left Panel: Animated Map -->
+    <div class="hidden lg:flex lg:w-1/2 h-screen relative bg-[var(--ink)] overflow-hidden items-center justify-center">
+        <!-- SVG Map Background (Simplified abstraction for aesthetics) -->
+        <svg class="absolute inset-0 w-full h-full text-[var(--ink)]-border opacity-30" viewBox="0 0 1000 600" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M100,200 Q200,100 300,300 T500,200 T700,400 T900,100" />
+            <path d="M50,400 Q150,500 250,300 T450,400 T650,200 T850,500" />
+            <path d="M200,100 Q400,200 600,100 T900,300" />
+        </svg>
+
+        <!-- Animated Glowing Dots and Floating Labels -->
+        <div class="absolute" style="top: 30%; left: 45%;">
+            <div class="w-3 h-3 bg-[var(--gold)] rounded-full dot-pulse relative"></div>
+            <span class="absolute top-4 left-4 text-[var(--text-muted)] font-mono text-xs uppercase tracking-widest float-label">Paris</span>
+        </div>
+        <div class="absolute" style="top: 50%; left: 70%;">
+            <div class="w-3 h-3 bg-[var(--teal)] rounded-full dot-pulse relative"></div>
+            <span class="absolute top-4 left-4 text-[var(--text-muted)] font-mono text-xs uppercase tracking-widest float-label" style="animation-delay: 1s;">Tokyo</span>
+        </div>
+        <div class="absolute" style="top: 60%; left: 20%;">
+            <div class="w-3 h-3 bg-[#6366F1] rounded-full dot-pulse relative"></div>
+            <span class="absolute top-4 left-4 text-[var(--text-muted)] font-mono text-xs uppercase tracking-widest float-label" style="animation-delay: 2s;">New York</span>
         </div>
 
-        <!-- Login Card -->
-        <div class="card" style="border-radius: 1rem;">
-            <div class="card-body" style="padding: 2rem;">
-                <h2 class="font-heading text-2xl text-center mb-6" style="color: var(--color-text);">Sign In</h2>
+        <div class="absolute bottom-12 left-12 z-10 max-w-md">
+            <h2 class="font-display text-4xl font-light text-[var(--text-primary)] leading-tight">
+                <em class="text-gold not-italic">The world</em> is waiting for you.
+            </h2>
+        </div>
+        
+        <!-- Overlay gradient to blend into right panel -->
+        <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[var(--ink)] to-transparent"></div>
+    </div>
 
-                {% if form.errors %}
-                <div class="mb-4 p-3 rounded-lg" style="background: rgba(239,68,68,0.1); color: var(--color-danger); font-size: 0.9rem;">
+    <!-- Right Panel: Login Form -->
+    <div class="w-full lg:w-1/2 h-screen overflow-y-auto flex flex-col p-8 relative z-10">
+        
+        <div class="flex-1 min-h-[2rem]"></div>
+        <!-- Glass Card -->
+        <div class="glass rounded-[var(--radius-xl)] p-10 w-full max-w-md relative overflow-hidden mx-auto flex-shrink-0">
+            
+            <!-- Subtle glow behind the form -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--gold)] opacity-[0.03] rounded-full blur-[60px] pointer-events-none"></div>
+
+            <div class="text-center mb-10">
+                <div class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center mb-6"
+                     style="background: linear-gradient(135deg, #E8A838, #F5C464);">
+                    <span class="text-[var(--ink)] font-bold text-2xl">T</span>
+                </div>
+                <h1 class="font-display text-3xl font-light mb-2">Welcome back</h1>
+                <p class="font-body text-xs uppercase tracking-wider text-[var(--text-muted)]">Sign in to continue your journey</p>
+            </div>
+
+            {% if form.errors %}
+                <div class="bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-red-500 text-sm p-4 rounded-[var(--radius-md)] mb-6 text-center">
                     ❌ Invalid username or password. Please try again.
                 </div>
-                {% endif %}
+            {% endif %}
 
-                <form method="post" id="login-form">
-                    {% csrf_token %}
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="id_username">👤 Username</label>
-                        {{ form.username }}
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="id_password">🔒 Password</label>
-                        {{ form.password }}
-                    </div>
-
-                    <button type="submit" class="btn btn-accent btn-lg w-full mt-4" id="login-btn">
-                        Login →
-                    </button>
-                </form>
-
-                <div class="mt-6 text-center">
-                    <p style="color: var(--color-text-muted); font-size: 0.9rem;">
-                        Don't have an account? 
-                        <a href="{% url 'signup' %}" class="font-semibold" style="color: var(--color-primary);">Sign Up</a>
-                    </p>
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    {{ form.username }}
+                    <label class="form-label-floating">Username</label>
                 </div>
+
+                <div class="form-group">
+                    {{ form.password }}
+                    <label class="form-label-floating">Password</label>
+                </div>
+
+                <button type="submit" class="btn-primary w-full mt-8">
+                    Log In
+                </button>
+            </form>
+
+            <div class="mt-8 text-center">
+                <p class="text-sm text-[var(--text-muted)]">
+                    Don't have an account? 
+                    <a href="{% url 'signup' %}" class="text-gold hover:text-[var(--gold-light)] font-medium transition-colors ml-1">Start exploring &rarr;</a>
+                </p>
             </div>
         </div>
+        <div class="flex-1 min-h-[2rem]"></div>
+
     </div>
+
 </div>
+
+<script>
+    // Style the Django form fields to match the input-field class
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
+        inputs.forEach(input => {
+            input.classList.add('input-field');
+            input.setAttribute('placeholder', ' '); // Required for the CSS floating label trick
+        });
+    });
+</script>
 {% endblock %}

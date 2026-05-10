@@ -1,128 +1,278 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Traveloop{% endblock %} — Travel Planner</title>
-    <meta name="description" content="{% block meta_description %}Plan your perfect multi-city trip with Traveloop. Build itineraries, track budgets, and share your travel plans.{% endblock %}">
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        teal: {
-                            900: '#0a5c5c',
-                            800: '#0D6E6E',
-                            700: '#11807F',
-                            600: '#1A9494',
-                            500: '#22A8A8',
-                        },
-                        amber: {
-                            500: '#F5A623',
-                            600: '#D4891A',
-                            400: '#FFD07A',
-                        },
-                        offwhite: '#F9F7F3',
-                        dark: '#1A1A2E',
-                    },
-                    fontFamily: {
-                        heading: ['Playfair Display', 'serif'],
-                        body: ['DM Sans', 'sans-serif'],
-                    },
-                },
-            },
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Traveloop{% endblock %} — Wander Further</title>
+  {% load static %}
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            ink: { DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)', card: 'var(--ink-card)', border: 'var(--ink-border)' },
+            gold: { DEFAULT: 'var(--gold)', light: 'var(--gold-light)' },
+            teal: { DEFAULT: 'var(--teal)' },
+            text: { primary: 'var(--text-primary)', muted: 'var(--text-muted)', ghost: 'var(--text-ghost)' }
+          },
+          fontFamily: {
+            display: ['Cormorant Garamond', 'serif'],
+            body: ['Syne', 'sans-serif'],
+            mono: ['DM Mono', 'monospace'],
+          }
         }
-    </script>
-    
-    <!-- Alpine.js CDN -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
-    
-    {% block extra_head %}{% endblock %}
+      }
+    }
+  </script>
+  <!-- Theme Initialization Script -->
+  <script>
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  </script>
+
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Sortable.js -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+  {% block extra_head %}{% endblock %}
 </head>
-<body class="font-body bg-offwhite text-dark min-h-screen" x-data="{ sidebarOpen: false }">
 
-    {% if user.is_authenticated %}
-    <!-- Mobile Hamburger -->
-    <button class="hamburger-btn" @click="sidebarOpen = !sidebarOpen" aria-label="Toggle menu">
-        <span x-text="sidebarOpen ? '✕' : '☰'">☰</span>
-    </button>
+<body class="bg-[var(--ink)] text-[var(--text-primary)] font-body min-h-screen transition-colors duration-300"
+      x-data="{ 
+        sidebarOpen: false, 
+        darkMode: document.documentElement.classList.contains('dark'),
+        toggleTheme() {
+          this.darkMode = !this.darkMode;
+          if(this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.theme = 'dark';
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.theme = 'light';
+          }
+        }
+      }">
 
-    <!-- Sidebar -->
-    <nav class="sidebar" :class="{ 'open': sidebarOpen }" @click.outside="sidebarOpen = false" id="main-nav">
-        <div class="sidebar-logo">
-            🌍 <span>Traveloop</span>
-        </div>
-        <div class="sidebar-nav">
-            <a href="{% url 'dashboard' %}" class="{% if request.path == '/' or request.path == '/dashboard/' %}active{% endif %}">
-                <span class="nav-icon">🏠</span> Dashboard
-            </a>
-            <a href="{% url 'trip_list' %}" class="{% if '/trips' in request.path %}active{% endif %}">
-                <span class="nav-icon">✈️</span> My Trips
-            </a>
-            <a href="{% url 'city_search' %}" class="{% if '/cities' in request.path %}active{% endif %}">
-                <span class="nav-icon">🏙️</span> Explore Cities
-            </a>
-            <a href="{% url 'activity_search' %}" class="{% if '/activities' in request.path %}active{% endif %}">
-                <span class="nav-icon">🎯</span> Activities
-            </a>
-            {% if user.is_staff %}
-            <a href="{% url 'admin_analytics' %}" class="{% if '/admin-dashboard' in request.path %}active{% endif %}">
-                <span class="nav-icon">📊</span> Analytics
-            </a>
-            {% endif %}
-        </div>
-        <div style="border-top: 1px solid rgba(255,255,255,0.15); padding: 1rem 0;">
-            <a href="{% url 'profile' %}" class="sidebar-nav {% if '/accounts/profile' in request.path %}active{% endif %}" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.25rem;color:rgba(255,255,255,0.8);text-decoration:none;font-size:0.95rem;font-weight:500;transition:all 0.2s ease;">
-                <span class="nav-icon">👤</span> {{ user.username }}
-            </a>
-            <form method="post" action="{% url 'logout' %}" style="display: block; width: 100%;">
-                {% csrf_token %}
-                <button type="submit" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.25rem;color:rgba(255,255,255,0.6);text-decoration:none;font-size:0.9rem;transition:all 0.2s ease; background:none; border:none; width:100%; text-align:left; cursor:pointer;">
-                    <span class="nav-icon">🚪</span> Logout
-                </button>
-            </form>
-        </div>
-    </nav>
-    {% endif %}
+  <!-- ░░░ BACKGROUND TEXTURE ░░░ -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <!-- Noise texture overlay (simplified for pure CSS fallback) -->
+    <div style="background-color: var(--ink); opacity: 0.03;" class="absolute inset-0"></div>
+    <!-- Ambient glow orbs -->
+    <div class="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full"
+         style="background: radial-gradient(circle, rgba(232,168,56,0.06) 0%, transparent 70%);"></div>
+    <div class="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full"
+         style="background: radial-gradient(circle, rgba(14,207,177,0.05) 0%, transparent 70%);"></div>
+  </div>
 
-    <!-- Toast Messages -->
-    <div class="toast-container" id="toast-container">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="toast toast-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}" 
-                     x-data="{ show: true }" 
-                     x-show="show" 
-                     x-init="setTimeout(() => show = false, 4000)"
-                     x-transition>
-                    {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}❌{% elif message.tags == 'warning' %}⚠️{% else %}ℹ️{% endif %}
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
+  {% if user.is_authenticated %}
+  <!-- ░░░ SIDEBAR ░░░ -->
+  <aside class="fixed top-0 left-0 h-screen w-[260px] z-50 flex flex-col
+                bg-[var(--ink)]-soft border-r border-[var(--ink-border)]
+                transition-transform duration-300 ease-out
+                lg:translate-x-0"
+         :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+
+    <!-- Logo -->
+    <div class="px-7 pt-8 pb-6 border-b border-[var(--ink-border)]">
+      <a href="{% url 'dashboard' %}" class="block">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center"
+               style="background: linear-gradient(135deg, #E8A838, #F5C464);">
+            <span class="text-[var(--ink)] font-bold text-lg">T</span>
+          </div>
+          <div>
+            <p class="font-display text-xl font-semibold text-[var(--text-primary)] leading-none">Traveloop</p>
+            <p class="font-body text-[10px] uppercase tracking-[0.15em] text-[var(--text-muted)] mt-0.5">Wander Further</p>
+          </div>
+        </div>
+      </a>
     </div>
 
-    <!-- Main Content -->
-    <main class="{% if user.is_authenticated %}main-content{% else %}{% endif %}">
-        {% block content %}{% endblock %}
-    </main>
+    <!-- Nav Links -->
+    <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+      {% with request.path as path %}
 
-    <!-- Custom JS -->
-    <script src="{% static 'js/app.js' %}"></script>
-    {% block extra_js %}{% endblock %}
+      <!-- Nav item macro: active = gold bg glow, inactive = transparent -->
+      <a href="{% url 'dashboard' %}"
+         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-body font-medium uppercase tracking-wider transition-all duration-200
+         {% if path == '/' or path == '/dashboard/' %}bg-gold/10 text-gold border border-gold/20
+         {% else %}text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent{% endif %}">
+        <span class="text-lg">🏠</span>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="{% url 'trip_list' %}"
+         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-body font-medium uppercase tracking-wider transition-all duration-200
+         {% if '/trips/' in path and 'create' not in path %}bg-gold/10 text-gold border border-gold/20
+         {% else %}text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent{% endif %}">
+        <span class="text-lg">✈️</span>
+        <span>My Trips</span>
+      </a>
+
+      <a href="{% url 'city_search' %}" 
+         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-body font-medium uppercase tracking-wider transition-all duration-200
+         {% if '/cities/' in path %}bg-gold/10 text-gold border border-gold/20
+         {% else %}text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent{% endif %}">
+        <span class="text-lg">🌍</span>
+        <span>Explore</span>
+      </a>
+      
+      <a href="{% url 'activity_search' %}" 
+         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-body font-medium uppercase tracking-wider transition-all duration-200
+         {% if '/activities/' in path %}bg-gold/10 text-gold border border-gold/20
+         {% else %}text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent{% endif %}">
+        <span class="text-lg">🎯</span>
+        <span>Activities</span>
+      </a>
+
+      <a href="{% url 'trip_create' %}" 
+         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-body font-medium uppercase tracking-wider transition-all duration-200
+         {% if '/trips/create/' in path %}bg-gold/10 text-gold border border-gold/20
+         {% else %}text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent{% endif %}">
+        <span class="text-lg">➕</span>
+        <span>New Trip</span>
+      </a>
+
+      <div class="divider my-3"></div>
+
+      <a href="{% url 'profile' %}" 
+         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-body font-medium uppercase tracking-wider transition-all duration-200
+         {% if '/accounts/profile/' in path %}bg-gold/10 text-gold border border-gold/20
+         {% else %}text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent{% endif %}">
+        <span class="text-lg">👤</span>
+        <span>Profile</span>
+      </a>
+
+      {% if user.is_staff %}
+      <a href="{% url 'admin_analytics' %}" 
+         class="nav-link group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-body font-medium uppercase tracking-wider transition-all duration-200
+         {% if '/admin-dashboard/' in path %}bg-gold/10 text-gold border border-gold/20
+         {% else %}text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent{% endif %}">
+        <span class="text-lg">📊</span>
+        <span>Analytics</span>
+      </a>
+      {% endif %}
+
+      {% endwith %}
+    </nav>
+
+    <!-- User Footer -->
+    <div class="px-4 pb-6 border-t border-[var(--ink-border)] pt-4">
+      <div class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <!-- Avatar -->
+        <div class="w-9 h-9 rounded-full overflow-hidden border border-[var(--ink-border)] flex-shrink-0">
+          {% if user.profile.avatar %}
+            <img src="{{ user.profile.avatar.url }}" alt="" class="w-full h-full object-cover">
+          {% else %}
+            <div class="w-full h-full bg-gradient-to-br from-[#E8A838] to-[#0ECFB1] flex items-center justify-center">
+              <span class="text-[var(--ink)] font-bold text-sm">{{ user.username|first|upper }}</span>
+            </div>
+          {% endif %}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-[var(--text-primary)] truncate">{{ user.get_full_name|default:user.username }}</p>
+          <p class="text-xs text-[var(--text-muted)] truncate">{{ user.email }}</p>
+        </div>
+      </div>
+      
+      <form method="post" action="{% url 'logout' %}" class="mt-2 w-full">
+          {% csrf_token %}
+          <button type="submit" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-body uppercase tracking-wider text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all bg-transparent border-none cursor-pointer">
+            <span class="text-lg">🚪</span>
+            Sign Out
+          </button>
+      </form>
+
+      <!-- Theme Toggle -->
+      <button @click="toggleTheme()" class="mt-2 w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-body uppercase tracking-wider text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5 transition-all bg-transparent border-none cursor-pointer">
+        <span x-show="!darkMode" class="text-lg">🌙</span>
+        <span x-show="!darkMode">Dark Mode</span>
+        <span x-show="darkMode" class="text-lg" style="display: none;">☀️</span>
+        <span x-show="darkMode" style="display: none;">Light Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ░░░ MOBILE HEADER ░░░ -->
+  <header class="lg:hidden fixed top-0 left-0 right-0 z-40 glass px-4 py-4 flex items-center justify-between border-b border-[var(--ink-border)]">
+    <button @click="sidebarOpen = true" class="text-[var(--text-muted)] focus:outline-none">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+    <span class="font-display text-lg font-semibold text-[var(--text-primary)]">Traveloop</span>
+    <div class="w-6"></div> <!-- Spacer for centering -->
+  </header>
+
+  <!-- ░░░ SIDEBAR OVERLAY (mobile) ░░░ -->
+  <div x-show="sidebarOpen" @click="sidebarOpen = false"
+       class="fixed inset-0 bg-black/60 z-30 lg:hidden"
+       x-transition:enter="transition-opacity duration-200"
+       x-transition:leave="transition-opacity duration-200"
+       style="display: none;"></div>
+  {% endif %}
+
+  <!-- ░░░ MAIN CONTENT ░░░ -->
+  <main class="{% if user.is_authenticated %}lg:ml-[260px]{% endif %} min-h-screen relative z-10">
+
+    {% if user.is_authenticated %}
+    <div class="pt-20 lg:pt-0">
+    {% endif %}
+
+      <!-- Django Messages -->
+      {% if messages %}
+      <div class="fixed top-6 right-6 z-[100] space-y-2 pointer-events-none">
+        {% for msg in messages %}
+        <div class="glass rounded-xl px-5 py-4 flex items-center gap-3 shadow-2xl pointer-events-auto
+             {% if msg.tags == 'success' %}border border-green-500/30 text-green-500 dark:text-green-400
+             {% elif msg.tags == 'error' %}border border-red-500/30 text-red-500 dark:text-red-400
+             {% else %}border border-[var(--ink-border)] text-[var(--text-primary)]{% endif %}"
+             x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 4000)"
+             x-transition:leave="transition-all duration-300"
+             x-transition:leave-start="opacity-100 translate-x-0"
+             x-transition:leave-end="opacity-0 translate-x-8">
+          <span>{{ msg }}</span>
+          <button @click="show = false" class="ml-2 opacity-50 hover:opacity-100 focus:outline-none">&times;</button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Page Content -->
+      <div class="page-enter">
+        <div class="p-4 md:p-8 max-w-7xl mx-auto">
+          {% block content %}{% endblock %}
+        </div>
+      </div>
+
+    {% if user.is_authenticated %}
+    </div>
+    {% endif %}
+  </main>
+
+  <!-- Custom JS -->
+  <script src="{% static 'js/app.js' %}"></script>
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

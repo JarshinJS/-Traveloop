@@ -1,125 +1,246 @@
 {% extends 'base.html' %}
-{% block title %}Budget — {{ trip.name }}{% endblock %}
+{% load static %}
+
+{% block title %}Budget Analysis: {{ trip.name }} — Traveloop{% endblock %}
+
 {% block content %}
-<div class="fade-in">
-    <div class="flex items-center justify-between mb-6">
+<div class="space-y-8">
+    
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--ink-border)] pb-6">
         <div>
-            <h1 class="font-heading text-3xl">💰 Budget Breakdown</h1>
-            <p style="color: var(--color-text-muted);">{{ trip.name }}</p>
+            <p class="font-body text-[10px] uppercase tracking-widest text-gold mb-1 flex items-center gap-2">
+                <a href="{% url 'trip_detail' trip.pk %}" class="hover:text-[var(--gold-light)]">&larr; Back to Overview</a>
+            </p>
+            <h1 class="font-display text-4xl md:text-5xl font-light text-[var(--text-primary)] mb-2">Budget Analysis</h1>
+            <p class="font-mono text-xs text-[var(--text-muted)]">{{ trip.name }}</p>
         </div>
-        <a href="{% url 'trip_detail' pk=trip.pk %}" class="btn btn-outline btn-sm">← Back to Trip</a>
+        <div class="flex items-center gap-4">
+            <a href="{% url 'trip_edit' trip.pk %}" class="btn-ghost !px-6 !py-2.5">
+                Update Budget
+            </a>
+        </div>
     </div>
 
     {% if over_budget %}
-    <div class="mb-6 p-4 rounded-lg flex items-center gap-3" style="background: rgba(245,166,35,0.15); border: 1px solid var(--color-accent);">
-        ⚠️ <span class="font-semibold" style="color: var(--color-accent-dark);">Over budget!</span>
-        <span>Estimated ${{ total_estimated|floatformat:0 }} exceeds your ${{ budget_total|floatformat:0 }} budget.</span>
+    <div class="glass p-5 rounded-[var(--radius-md)] border-[rgba(239,68,68,0.3)] shadow-[0_0_20px_rgba(239,68,68,0.1)] flex items-center gap-4">
+        <span class="text-2xl">⚠️</span>
+        <div>
+            <p class="font-body text-xs uppercase tracking-widest text-red-500 mb-1">Budget Exceeded</p>
+            <p class="text-sm text-[var(--text-primary)]">Your estimated costs (${{ total_estimated|floatformat:0 }}) exceed your allocated budget (${{ budget_total|floatformat:0 }}).</p>
+        </div>
     </div>
     {% endif %}
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="stat-card">
-            <div class="stat-value text-xl">${{ budget_total|floatformat:0 }}</div>
-            <div class="stat-label">Total Budget</div>
+    <!-- STATS ROW -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="card p-6 flex flex-col gap-2">
+            <p class="font-mono text-3xl font-light text-[var(--text-primary)]">${{ budget_total|floatformat:0 }}</p>
+            <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Allocated Budget</p>
         </div>
-        <div class="stat-card" style="border-left-color: {% if over_budget %}var(--color-danger){% else %}var(--color-success){% endif %};">
-            <div class="stat-value text-xl" style="color: {% if over_budget %}var(--color-danger){% else %}var(--color-success){% endif %};">${{ total_estimated|floatformat:0 }}</div>
-            <div class="stat-label">Estimated Cost</div>
+        <div class="card p-6 flex flex-col gap-2 border-[rgba(232,168,56,0.2)]">
+            <p class="font-mono text-3xl font-light {% if over_budget %}text-red-500{% else %}text-gold{% endif %}">
+                $<span data-counter="{{ total_estimated|floatformat:0 }}">0</span>
+            </p>
+            <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Estimated Cost</p>
         </div>
-        <div class="stat-card" style="border-left-color: var(--color-accent);">
-            <div class="stat-value text-xl" style="color: var(--color-accent);">${{ avg_per_day|floatformat:0 }}</div>
-            <div class="stat-label">Avg. per Day</div>
+        <div class="card p-6 flex flex-col gap-2">
+            <p class="font-mono text-3xl font-light text-[var(--text-primary)]">${{ avg_per_day|floatformat:0 }}</p>
+            <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Avg. Per Day</p>
         </div>
-        <div class="stat-card">
-            {% if budget_total > 0 %}
-            <div class="stat-value text-xl">{% widthratio total_estimated budget_total 100 %}%</div>
-            {% else %}
-            <div class="stat-value text-xl">—</div>
-            {% endif %}
-            <div class="stat-label">Budget Used</div>
+        <div class="card p-6 flex flex-col gap-2">
+            {% widthratio total_estimated budget_total 100 as pct %}
+            <p class="font-mono text-3xl font-light {% if over_budget %}text-red-500{% else %}text-teal{% endif %}">
+                {% if budget_total > 0 %}{{ pct|default:0 }}%{% else %}—{% endif %}
+            </p>
+            <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Budget Used</p>
         </div>
     </div>
 
+    <!-- PROGRESS BAR -->
     {% if budget_total > 0 %}
-    <div class="card mb-6">
-        <div class="card-body">
-            <h3 class="font-heading text-lg mb-3">Budget Progress</h3>
-            <div class="progress-bar" style="height: 1rem;">
-                <div class="progress-fill" style="width: min({% widthratio total_estimated budget_total 100 %}%, 100%); {% if over_budget %}background: linear-gradient(90deg, var(--color-danger), #ff6b6b);{% endif %}"></div>
-            </div>
+    <div class="card p-8 border-[var(--ink-border)]">
+        <div class="flex justify-between items-end mb-4">
+            <h3 class="font-display text-2xl font-light text-[var(--text-primary)]">Utilization</h3>
+            <span class="font-mono text-sm text-[var(--text-muted)]">
+                ${{ total_estimated|floatformat:0 }} / ${{ budget_total|floatformat:0 }}
+            </span>
+        </div>
+        <div class="h-3 bg-[var(--ink)]-soft rounded-full overflow-hidden relative border border-[rgba(255,255,255,0.02)]">
+            <div class="absolute inset-y-0 left-0 transition-all duration-1000 rounded-full" 
+                 style="width: min({{ pct|default:0 }}%, 100%); background: {% if over_budget %}var(--danger){% else %}linear-gradient(90deg, var(--teal), var(--gold)){% endif %}; box-shadow: 0 0 10px {% if over_budget %}rgba(239,68,68,0.5){% else %}rgba(232,168,56,0.5){% endif %};"
+                 data-progress="min({{ pct|default:0 }}%, 100%)"></div>
         </div>
     </div>
     {% endif %}
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <!-- Pie Chart -->
-        <div class="card">
-            <div class="card-body">
-                <h3 class="font-heading text-lg mb-4">Cost by Category</h3>
-                <canvas id="categoryChart" height="250"></canvas>
+    <!-- CHARTS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Category Chart -->
+        <div class="card p-6 flex flex-col">
+            <h3 class="font-display text-2xl font-light text-[var(--text-primary)] mb-6">Cost by Category</h3>
+            <div class="flex-1 relative flex justify-center items-center min-h-[300px]">
+                <canvas id="categoryChart"></canvas>
             </div>
         </div>
-        <!-- Bar Chart -->
-        <div class="card">
-            <div class="card-body">
-                <h3 class="font-heading text-lg mb-4">Cost per Stop</h3>
-                <canvas id="stopsChart" height="250"></canvas>
+        
+        <!-- Stop Chart -->
+        <div class="card p-6 flex flex-col">
+            <h3 class="font-display text-2xl font-light text-[var(--text-primary)] mb-6">Cost per Destination</h3>
+            <div class="flex-1 relative flex justify-center items-center min-h-[300px]">
+                <canvas id="stopsChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Cost Breakdown Table -->
-    <div class="card">
-        <div class="card-body">
-            <h3 class="font-heading text-lg mb-4">Detailed Breakdown</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead><tr style="border-bottom: 2px solid var(--color-border);"><th class="text-left p-3">City</th><th class="text-right p-3">Activities</th><th class="text-right p-3">Accommodation</th><th class="text-right p-3">Total</th></tr></thead>
-                    <tbody>
-                        {% for s in stops_data %}
-                        <tr style="border-bottom: 1px solid var(--color-border);">
-                            <td class="p-3 font-medium">{{ s.stop.city.name }}</td>
-                            <td class="p-3 text-right">${{ s.activity_cost|floatformat:0 }}</td>
-                            <td class="p-3 text-right">${{ s.stay_cost|floatformat:0 }}</td>
-                            <td class="p-3 text-right font-semibold">${{ s.total|floatformat:0 }}</td>
-                        </tr>
-                        {% endfor %}
-                        <tr style="border-top: 2px solid var(--color-primary);">
-                            <td class="p-3 font-bold">Total</td><td></td><td></td>
-                            <td class="p-3 text-right font-bold" style="color: var(--color-primary);">${{ total_estimated|floatformat:0 }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <!-- DETAILED TABLE -->
+    <div class="card p-0 overflow-hidden border border-[var(--ink-border)]">
+        <div class="p-6 bg-black/5 dark:bg-white/5 border-b border-[var(--ink-border)]">
+            <h3 class="font-display text-2xl font-light text-[var(--text-primary)]">Detailed Breakdown</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-[var(--ink-border)] bg-[rgba(255,255,255,0.01)]">
+                        <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium">Destination</th>
+                        <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium text-right">Activities</th>
+                        <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium text-right">Accommodation</th>
+                        <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium text-right">Total Est.</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--ink-border)]">
+                    {% for s in stops_data %}
+                    <tr class="hover:bg-black/5 dark:bg-white/5 transition-colors group">
+                        <td class="py-4 px-6 font-medium text-[var(--text-primary)]">{{ s.stop.city.name }}</td>
+                        <td class="py-4 px-6 font-mono text-sm text-[var(--text-muted)] text-right">${{ s.activity_cost|floatformat:0 }}</td>
+                        <td class="py-4 px-6 font-mono text-sm text-[var(--text-muted)] text-right">${{ s.stay_cost|floatformat:0 }}</td>
+                        <td class="py-4 px-6 font-mono text-sm text-gold text-right font-medium">${{ s.total|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="bg-black/5 dark:bg-white/5 border-t border-[var(--ink-border)]">
+                    <tr>
+                        <td colspan="3" class="py-5 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] text-right">Grand Total</td>
+                        <td class="py-5 px-6 font-mono text-lg text-gold text-right font-medium">
+                            ${{ total_estimated|floatformat:0 }}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
     </div>
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Shared Chart.js Dark Mode Settings
+    Chart.defaults.color = '#7B8CA8';
+    Chart.defaults.font.family = "'DM Mono', monospace";
+    
     const catLabels = {{ category_labels|safe }};
     const catValues = {{ category_values|safe }};
-    const colors = ['#0D6E6E','#F5A623','#10B981','#EF4444','#8B5CF6','#EC4899','#F59E0B','#6366F1'];
+    const colors = [
+        '#E8A838', // Gold
+        '#0ECFB1', // Teal
+        '#6366F1', // Indigo
+        '#EC4899', // Pink
+        '#8B5CF6', // Purple
+        '#EF4444', // Red
+        '#F59E0B', // Amber
+        '#10B981'  // Emerald
+    ];
 
     if (catLabels.length > 0) {
         new Chart(document.getElementById('categoryChart'), {
             type: 'doughnut',
-            data: { labels: catLabels, datasets: [{ data: catValues, backgroundColor: colors.slice(0, catLabels.length), borderWidth: 0 }] },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            data: { 
+                labels: catLabels, 
+                datasets: [{ 
+                    data: catValues, 
+                    backgroundColor: colors.slice(0, catLabels.length), 
+                    borderWidth: 2,
+                    borderColor: '#161D2E' // Matches var(--ink-card)
+                }] 
+            },
+            options: { 
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: { 
+                    legend: { 
+                        position: 'right',
+                        labels: {
+                            color: '#F0EDE6',
+                            padding: 20,
+                            font: { family: "'Syne', sans-serif", size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(10, 14, 26, 0.9)',
+                        titleColor: '#F0EDE6',
+                        bodyColor: '#7B8CA8',
+                        borderColor: '#1E2A3A',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return ' $' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                } 
+            }
         });
     }
 
-    const stopNames = [{% for s in stops_data %}'{{ s.stop.city.name }}',{% endfor %}];
+    const stopNames = [{% for s in stops_data %}'{{ s.stop.city.name|escapejs }}',{% endfor %}];
     const stopTotals = [{% for s in stops_data %}{{ s.total|floatformat:0 }},{% endfor %}];
 
     if (stopNames.length > 0) {
         new Chart(document.getElementById('stopsChart'), {
             type: 'bar',
-            data: { labels: stopNames, datasets: [{ label: 'Cost ($)', data: stopTotals, backgroundColor: '#0D6E6E', borderRadius: 8 }] },
-            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            data: { 
+                labels: stopNames, 
+                datasets: [{ 
+                    label: 'Cost ($)', 
+                    data: stopTotals, 
+                    backgroundColor: 'rgba(232, 168, 56, 0.8)', // Gold
+                    hoverBackgroundColor: '#E8A838',
+                    borderRadius: 6,
+                    borderSkipped: false
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(10, 14, 26, 0.9)',
+                        titleColor: '#F0EDE6',
+                        bodyColor: '#7B8CA8',
+                        borderColor: '#1E2A3A',
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                }, 
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        border: { display: false },
+                        ticks: { callback: function(value) { return '$' + value; } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        border: { display: false },
+                        ticks: { font: { family: "'Syne', sans-serif" } }
+                    }
+                } 
+            }
         });
     }
 });

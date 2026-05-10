@@ -8,8 +8,8 @@ class SignupForm(UserCreationForm):
     email = forms.EmailField(
         required=True,
         widget=forms.EmailInput(attrs={
-            'class': 'form-input',
-            'placeholder': 'your@email.com',
+            'class': 'input-field',
+            'placeholder': ' ',
         })
     )
 
@@ -20,16 +20,16 @@ class SignupForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({
-            'class': 'form-input',
-            'placeholder': 'Choose a username',
+            'class': 'input-field',
+            'placeholder': ' ',
         })
         self.fields['password1'].widget.attrs.update({
-            'class': 'form-input',
-            'placeholder': 'Create a password',
+            'class': 'input-field',
+            'placeholder': ' ',
         })
         self.fields['password2'].widget.attrs.update({
-            'class': 'form-input',
-            'placeholder': 'Confirm your password',
+            'class': 'input-field',
+            'placeholder': ' ',
         })
 
     def save(self, commit=True):
@@ -44,12 +44,12 @@ class LoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['username'].widget.attrs.update({
-            'class': 'form-input',
-            'placeholder': 'Username',
+            'class': 'input-field',
+            'placeholder': ' ',
         })
         self.fields['password'].widget.attrs.update({
-            'class': 'form-input',
-            'placeholder': 'Password',
+            'class': 'input-field',
+            'placeholder': ' ',
         })
 
 
@@ -58,13 +58,17 @@ class UserUpdateForm(forms.ModelForm):
         model = User
         fields = ('first_name', 'last_name', 'email')
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'First name'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Last name'}),
-            'email': forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'Email'}),
+            'first_name': forms.TextInput(attrs={'class': 'input-field', 'placeholder': ' '}),
+            'last_name': forms.TextInput(attrs={'class': 'input-field', 'placeholder': ' '}),
+            'email': forms.EmailInput(attrs={'class': 'input-field', 'placeholder': ' '}),
         }
 
 
 class ProfileUpdateForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=50, required=False)
+    last_name = forms.CharField(max_length=50, required=False)
+    email = forms.EmailField(required=False)
+
     LANGUAGE_CHOICES = [
         ('en', 'English'),
         ('es', 'Spanish'),
@@ -78,12 +82,19 @@ class ProfileUpdateForm(forms.ModelForm):
 
     language_preference = forms.ChoiceField(
         choices=LANGUAGE_CHOICES,
-        widget=forms.Select(attrs={'class': 'form-input'}),
+        widget=forms.Select(attrs={'class': 'input-field'}),
     )
 
     class Meta:
         model = UserProfile
-        fields = ('avatar', 'language_preference')
+        fields = ['avatar', 'language_preference']
         widgets = {
-            'avatar': forms.FileInput(attrs={'class': 'form-input', 'accept': 'image/*'}),
+            'avatar': forms.FileInput(attrs={'class': 'input-field', 'accept': 'image/*'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user:
+            self.fields['first_name'].initial = self.instance.user.first_name
+            self.fields['last_name'].initial = self.instance.user.last_name
+            self.fields['email'].initial = self.instance.user.email

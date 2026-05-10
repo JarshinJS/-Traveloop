@@ -1,20 +1,106 @@
 {% extends 'base.html' %}
-{% block title %}{{ activity.name }}{% endblock %}
+{% load static %}
+
+{% block title %}{{ activity.name }} — Traveloop{% endblock %}
+
 {% block content %}
-<div class="fade-in max-w-3xl mx-auto">
-    <a href="{% url 'activity_search' %}" class="btn btn-outline btn-sm mb-4">← Back</a>
-    <div class="card">
-        <div class="card-body" style="padding: 2rem;">
-            <h1 class="font-heading text-3xl mb-2">{{ activity.name }}</h1>
-            <p class="mb-4" style="color: var(--color-text-muted);">📍 {{ activity.city.name }}, {{ activity.city.country }}</p>
-            <div class="flex flex-wrap gap-3 mb-6">
-                <span class="badge badge-primary">{{ activity.get_category_display }}</span>
-                <span class="badge badge-accent">${{ activity.estimated_cost }}</span>
-                <span class="badge">⏱️ {{ activity.duration_hours }} hours</span>
-                {% if activity.is_popular %}<span class="badge badge-success">🔥 Popular</span>{% endif %}
+<div class="max-w-4xl mx-auto space-y-8 pb-12 fade-in">
+    
+    <div class="pt-6">
+        <a href="{% url 'activity_search' %}" class="btn-ghost !py-2 !px-4">
+            &larr; Back to Experiences
+        </a>
+    </div>
+
+    <!-- ░░░ HERO DETAILS ░░░ -->
+    <div class="glass p-10 rounded-[var(--radius-xl)] border border-[var(--ink-border)] shadow-[0_0_40px_rgba(0,0,0,0.3)] relative overflow-hidden">
+        
+        <!-- Subtle Glow -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--teal)] opacity-[0.03] rounded-full blur-[60px] pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-[var(--gold)] opacity-[0.03] rounded-full blur-[60px] pointer-events-none"></div>
+        
+        <div class="relative z-10">
+            <div class="flex flex-wrap items-start justify-between gap-6 mb-6">
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="badge badge-teal">{{ activity.get_category_display }}</span>
+                        {% if activity.is_popular %}
+                        <span class="badge badge-gold !bg-gold/10 !text-gold !border-gold">
+                            🔥 Popular
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h1 class="font-display text-5xl md:text-6xl font-light text-[var(--text-primary)] mb-2">{{ activity.name }}</h1>
+                    <p class="font-body text-sm text-gold uppercase tracking-widest cursor-pointer hover:underline" onclick="location.href='{% url 'city_detail' activity.city.pk %}'">
+                        {{ activity.city.name }}, {{ activity.city.country }}
+                    </p>
+                </div>
+                
+                <div class="flex flex-col gap-4 text-right border-l border-[var(--ink-border)] pl-6">
+                    <div>
+                        <p class="font-mono text-3xl text-gold">${{ activity.estimated_cost|floatformat:0 }}</p>
+                        <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Est. Cost</p>
+                    </div>
+                    <div>
+                        <p class="font-mono text-3xl text-[var(--text-primary)]">{{ activity.duration_hours }}<span class="text-lg text-[var(--text-muted)]">h</span></p>
+                        <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Duration</p>
+                    </div>
+                </div>
             </div>
-            <p>{{ activity.description }}</p>
+            
+            <div class="border-t border-[var(--ink-border)] pt-8 mt-4">
+                <h3 class="font-display text-2xl font-light text-[var(--text-primary)] mb-4">About this Experience</h3>
+                <p class="font-body text-sm text-[var(--text-muted)] leading-relaxed">
+                    {{ activity.description }}
+                </p>
+            </div>
         </div>
     </div>
+    
+    <!-- ADD TO TRIP (Quick Action) -->
+    <div class="card p-8 border-[var(--ink-border)] flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+            <h3 class="font-display text-2xl font-light text-[var(--text-primary)] mb-1">Experience this for yourself</h3>
+            <p class="font-body text-xs text-[var(--text-muted)]">Add {{ activity.name }} to one of your upcoming journeys.</p>
+        </div>
+        
+        {% if user.is_authenticated %}
+        <div x-data="{ showModal: false }">
+            <button @click="showModal = true" class="btn-primary !px-8">Add to Journey</button>
+            
+            <!-- MODAL -->
+            <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="showModal = false"></div>
+                <div class="glass rounded-[var(--radius-xl)] p-8 max-w-md w-full relative z-10 border border-[var(--ink-border)] shadow-2xl">
+                    <h3 class="font-display text-3xl font-medium mb-2">Add Activity</h3>
+                    <p class="text-sm text-[var(--text-muted)] mb-6">Select a journey to plan this experience.</p>
+                    
+                    <div class="space-y-2 max-h-60 overflow-y-auto hide-scrollbar mb-6">
+                        {% for trip in user.trips.all %}
+                        <a href="{% url 'itinerary_builder' trip.pk %}" class="block p-4 rounded-xl border border-[var(--ink-border)] bg-black/5 dark:bg-white/5 hover:border-teal hover:bg-[rgba(14,207,177,0.05)] transition-colors group">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-[var(--text-primary)] group-hover:text-teal transition-colors">{{ trip.name }}</span>
+                                <span class="text-teal opacity-0 group-hover:opacity-100">&rarr;</span>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="text-center py-6 text-sm text-[var(--text-muted)] border border-dashed border-[var(--ink-border)] rounded-xl">
+                            No active journeys found.
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <button type="button" @click="showModal = false" class="btn-ghost flex-1">Cancel</button>
+                        <a href="{% url 'trip_create' %}" class="btn-primary flex-1 text-center">New Trip</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <a href="{% url 'login' %}?next={{ request.path }}" class="btn-primary !px-8">Log in to add</a>
+        {% endif %}
+    </div>
+
 </div>
 {% endblock %}

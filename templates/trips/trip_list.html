@@ -1,70 +1,103 @@
 {% extends 'base.html' %}
-{% block title %}My Trips{% endblock %}
+{% load static %}
+
+{% block title %}My Journeys — Traveloop{% endblock %}
 
 {% block content %}
-<div class="fade-in">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <h1 class="font-heading text-3xl">✈️ My Trips</h1>
-        <div class="flex items-center gap-3">
-            <form method="get" class="flex items-center gap-2" id="trip-search-form">
-                <input type="text" name="q" value="{{ query }}" placeholder="Search trips..." class="form-input" style="max-width: 240px;">
-                <button type="submit" class="btn btn-primary btn-sm">🔍</button>
+<div class="space-y-8" x-data="{ tab: 'all' }">
+    
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--ink-border)] pb-6">
+        <div>
+            <h1 class="font-display text-5xl font-light text-[var(--text-primary)] mb-2">My Journeys</h1>
+            <p class="font-body text-xs uppercase tracking-widest text-[var(--text-muted)]">{{ trips.count }} trips planned</p>
+        </div>
+        
+        <div class="flex items-center gap-4 w-full md:w-auto">
+            <form method="get" class="relative flex-1 md:w-64">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search destinations..." 
+                       class="input-field pl-10 !py-3 !rounded-full !bg-black/5 dark:bg-white/5">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">🔍</span>
             </form>
-            <a href="{% url 'trip_create' %}" class="btn btn-accent" id="new-trip-btn">+ New Trip</a>
+            <a href="{% url 'trip_create' %}" class="btn-primary !px-6 !py-3 flex-shrink-0">
+                + New Trip
+            </a>
         </div>
     </div>
 
+    <!-- TABS -->
+    <div class="flex gap-6 border-b border-[var(--ink-border)]">
+        <button @click="tab = 'all'" class="pb-3 text-xs font-body uppercase tracking-widest transition-colors"
+                :class="tab === 'all' ? 'text-gold border-b-2 border-gold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'">All</button>
+        <button @click="tab = 'upcoming'" class="pb-3 text-xs font-body uppercase tracking-widest transition-colors"
+                :class="tab === 'upcoming' ? 'text-gold border-b-2 border-gold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'">Upcoming</button>
+        <button @click="tab = 'past'" class="pb-3 text-xs font-body uppercase tracking-widest transition-colors"
+                :class="tab === 'past' ? 'text-gold border-b-2 border-gold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'">Past</button>
+    </div>
+
     {% if trips %}
+    <!-- EDITORIAL GRID -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for trip in trips %}
-        <div class="card slide-up" style="animation-delay: {{ forloop.counter0 }}00ms;">
-            <div class="cover-container">
-                {% if trip.cover_photo %}
-                <img src="{{ trip.cover_photo.url }}" alt="{{ trip.name }}">
-                {% else %}
-                <div class="w-full h-full flex items-center justify-center text-5xl" style="background: linear-gradient(135deg, #0D6E6E, #1A9494);">
-                    🗺️
+        <!-- We use Alpine to filter by date simply by adding a data attribute, though normally done in backend -->
+        <div class="card group relative overflow-hidden h-80 flex flex-col justify-end city-card 
+             {% if forloop.first %}lg:col-span-2 lg:row-span-2 h-[40rem]{% endif %}"
+             x-show="tab === 'all' || (tab === 'upcoming' && '{{ trip.start_date|date:"Y-m-d" }}' >= new Date().toISOString().split('T')[0]) || (tab === 'past' && '{{ trip.start_date|date:"Y-m-d" }}' < new Date().toISOString().split('T')[0])"
+             x-transition>
+            
+            {% if trip.cover_photo %}
+                <img src="{{ trip.cover_photo.url }}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 city-image">
+            {% else %}
+                <div class="absolute inset-0 w-full h-full bg-[var(--ink)]-soft city-image flex items-center justify-center">
+                    <span class="font-display text-6xl opacity-10">✈️</span>
                 </div>
+            {% endif %}
+            
+            <div class="absolute inset-0 bg-gradient-to-t from-[var(--ink)] via-[rgba(10,14,26,0.6)] to-transparent opacity-90 transition-opacity city-overlay"></div>
+            
+            <div class="absolute top-4 right-4 z-10 flex gap-2">
+                {% if trip.is_public %}
+                    <span class="badge badge-teal backdrop-blur-md">Public</span>
                 {% endif %}
-                <div class="cover-overlay"></div>
-                <div class="absolute top-3 right-3">
-                    {% if trip.is_public %}
-                    <span class="badge badge-success">🌐 Public</span>
-                    {% else %}
-                    <span class="badge" style="background: rgba(0,0,0,0.5); color: #fff;">🔒 Private</span>
-                    {% endif %}
+                <span class="badge badge-gold backdrop-blur-md">
+                    {{ trip.start_date|date:"M d" }} — {{ trip.end_date|date:"M d, Y" }}
+                </span>
+            </div>
+
+            <div class="relative z-10 p-6 transform transition-transform duration-500">
+                <h3 class="font-display {% if forloop.first %}text-5xl{% else %}text-3xl{% endif %} font-medium text-[var(--text-primary)] mb-2">{{ trip.name }}</h3>
+                <div class="flex items-center gap-4 font-mono text-xs text-[var(--text-muted)] mb-4">
+                    <span>{{ trip.stops.count }} CITIES</span>
+                    <span>•</span>
+                    <span>{{ trip.duration_days }} DAYS</span>
+                    <span>•</span>
+                    <span>${{ trip.total_estimated_cost|floatformat:0 }} EST.</span>
+                </div>
+                
+                <!-- Action Buttons sliding up -->
+                <div class="flex gap-3 overflow-hidden absolute bottom-0 left-6 right-6 pb-6 translate-y-[150%] group-hover:translate-y-0 transition-transform duration-500">
+                    <a href="{% url 'trip_detail' trip.pk %}" class="btn-primary flex-1 !py-2">View</a>
+                    <a href="{% url 'itinerary_builder' trip.pk %}" class="btn-ghost !py-2 hover:bg-[rgba(255,255,255,0.1)]">Edit</a>
+                    <a href="{% url 'trip_delete' trip.pk %}" class="btn-ghost !py-2 !border-[rgba(239,68,68,0.3)] !text-red-500 hover:!bg-[rgba(239,68,68,0.1)] hover:!border-[var(--danger)]">Delete</a>
                 </div>
             </div>
-            <div class="card-body">
-                <h3 class="font-heading text-xl mb-1">{{ trip.name }}</h3>
-                <p class="text-sm mb-3" style="color: var(--color-text-muted);">
-                    📅 {{ trip.start_date|date:"M d" }} — {{ trip.end_date|date:"M d, Y" }}
-                </p>
-
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="badge badge-primary">{{ trip.stops.count }} cities</span>
-                    <span class="badge badge-accent">{{ trip.duration_days }} days</span>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <a href="{% url 'trip_detail' pk=trip.pk %}" class="btn btn-primary btn-sm flex-1">View</a>
-                    <a href="{% url 'trip_edit' pk=trip.pk %}" class="btn btn-outline btn-sm">✏️</a>
-                    <a href="{% url 'trip_delete' pk=trip.pk %}" class="btn btn-danger btn-sm">🗑️</a>
-                </div>
-            </div>
+            
+            <!-- Spacer to push content up when hovering to make room for buttons -->
+            <div class="h-0 group-hover:h-12 transition-all duration-500"></div>
         </div>
         {% endfor %}
     </div>
     {% else %}
     <!-- Empty State -->
-    <div class="empty-state">
-        <div class="empty-icon">🧳</div>
-        <p>You haven't planned any trips yet!</p>
-        <a href="{% url 'trip_create' %}" class="btn btn-accent btn-lg" id="empty-new-trip-btn">
-            ✈️ Plan Your First Trip
+    <div class="empty-state py-20">
+        <div class="empty-icon text-6xl mb-6 opacity-30">🌍</div>
+        <h3 class="font-display text-3xl font-light text-[var(--text-primary)] mb-2">Your passport is waiting.</h3>
+        <p class="font-body text-xs uppercase tracking-wider text-[var(--text-muted)] mb-8">No journeys match your criteria.</p>
+        <a href="{% url 'trip_create' %}" class="btn-primary">
+            Plan New Trip &rarr;
         </a>
     </div>
     {% endif %}
+
 </div>
 {% endblock %}

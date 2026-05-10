@@ -1,110 +1,247 @@
 {% extends 'base.html' %}
-{% block title %}{% if edit_mode %}Edit Trip{% else %}Create Trip{% endif %}{% endblock %}
+{% load static %}
+
+{% block title %}{% if edit_mode %}Edit Trip{% else %}Create Trip{% endif %} — Traveloop{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto fade-in">
-    <h1 class="font-heading text-3xl mb-6">
-        {% if edit_mode %}✏️ Edit Trip{% else %}✈️ Plan a New Trip{% endif %}
-    </h1>
+<div class="max-w-6xl mx-auto pb-12" x-data="{
+    step: 1,
+    name: '{{ form.instance.name|escapejs|default:"" }}',
+    startDate: '{{ form.instance.start_date|date:"Y-m-d"|default:"" }}',
+    endDate: '{{ form.instance.end_date|date:"Y-m-d"|default:"" }}',
+    budget: '{{ form.instance.total_budget|default:"" }}',
+    coverPreview: '{% if form.instance.cover_photo %}{{ form.instance.cover_photo.url }}{% endif %}',
+    isPublic: {{ form.instance.is_public|yesno:"true,false" }},
+    
+    // Calculates days difference for preview
+    get duration() {
+        if (!this.startDate || !this.endDate) return '—';
+        const start = new Date(this.startDate);
+        const end = new Date(this.endDate);
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        return diffDays > 0 ? diffDays + 1 : 1;
+    },
+    
+    get formattedStartDate() {
+        if (!this.startDate) return 'Date';
+        return new Date(this.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    },
+    
+    get formattedEndDate() {
+        if (!this.endDate) return 'Date';
+        return new Date(this.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+}">
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" x-data="{
-        name: '{{ form.instance.name|default:"My Amazing Trip" }}',
-        startDate: '{{ form.instance.start_date|date:"Y-m-d"|default:"" }}',
-        endDate: '{{ form.instance.end_date|date:"Y-m-d"|default:"" }}',
-        coverPreview: '{% if form.instance.cover_photo %}{{ form.instance.cover_photo.url }}{% endif %}',
-        isPublic: {{ form.instance.is_public|yesno:"true,false" }},
-    }">
-        <!-- Form -->
-        <div class="card">
-            <div class="card-body" style="padding: 2rem;">
-                <form method="post" enctype="multipart/form-data" id="trip-form">
-                    {% csrf_token %}
+    <!-- HEADER -->
+    <div class="mb-12 text-center">
+        <h1 class="font-display text-4xl font-light mb-2">
+            {% if edit_mode %}Edit Journey{% else %}Plan New Journey{% endif %}
+        </h1>
+        <p class="font-body text-xs uppercase tracking-widest text-[var(--text-muted)]">Define the parameters of your next adventure</p>
+    </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Trip Name *</label>
-                        <input type="text" name="name" x-model="name" value="{{ form.instance.name }}"
-                               class="form-input" placeholder="e.g. European Adventure 2025" required>
-                        {% if form.name.errors %}<p class="form-error">{{ form.name.errors.0 }}</p>{% endif %}
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label">Start Date *</label>
-                            <input type="date" name="start_date" x-model="startDate"
-                                   value="{{ form.instance.start_date|date:'Y-m-d' }}"
-                                   class="form-input" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">End Date *</label>
-                            <input type="date" name="end_date" x-model="endDate"
-                                   value="{{ form.instance.end_date|date:'Y-m-d' }}"
-                                   class="form-input" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        {{ form.description }}
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Cover Photo</label>
-                        <input type="file" name="cover_photo" accept="image/*" class="form-input"
-                               @change="coverPreview = URL.createObjectURL($event.target.files[0])">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Total Budget (USD)</label>
-                        {{ form.total_budget }}
-                    </div>
-
-                    <div class="form-group flex items-center gap-3">
-                        <input type="checkbox" name="is_public" x-model="isPublic" class="checkbox-custom"
-                               {% if form.instance.is_public %}checked{% endif %}>
-                        <label class="form-label mb-0">Make this trip public</label>
-                    </div>
-
-                    <button type="submit" class="btn btn-accent btn-lg w-full mt-4" id="save-trip-btn">
-                        {% if edit_mode %}💾 Update Trip{% else %}🚀 Create Trip{% endif %}
-                    </button>
-                </form>
+    <!-- MAIN GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
+        
+        <!-- FORM PANEL -->
+        <div class="lg:col-span-3">
+            
+            <!-- Stepper -->
+            <div class="flex items-center justify-between mb-8 relative">
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-px bg-[var(--ink-border)] z-0"></div>
+                <!-- Step 1 -->
+                <div class="relative z-10 flex flex-col items-center gap-2 cursor-pointer transition-all" @click="step = 1">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-mono text-xs transition-colors"
+                         :class="step >= 1 ? 'bg-[var(--gold)] text-[var(--ink)]' : 'bg-[var(--ink-card)] text-[var(--text-muted)] border border-[var(--ink-border)]'">1</div>
+                    <span class="font-body text-[10px] uppercase tracking-wider hidden sm:block" :class="step >= 1 ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'">Name</span>
+                </div>
+                <!-- Step 2 -->
+                <div class="relative z-10 flex flex-col items-center gap-2 cursor-pointer transition-all" @click="step = 2">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-mono text-xs transition-colors"
+                         :class="step >= 2 ? 'bg-[var(--gold)] text-[var(--ink)]' : 'bg-[var(--ink-card)] text-[var(--text-muted)] border border-[var(--ink-border)]'">2</div>
+                    <span class="font-body text-[10px] uppercase tracking-wider hidden sm:block" :class="step >= 2 ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'">Dates</span>
+                </div>
+                <!-- Step 3 -->
+                <div class="relative z-10 flex flex-col items-center gap-2 cursor-pointer transition-all" @click="step = 3">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-mono text-xs transition-colors"
+                         :class="step >= 3 ? 'bg-[var(--gold)] text-[var(--ink)]' : 'bg-[var(--ink-card)] text-[var(--text-muted)] border border-[var(--ink-border)]'">3</div>
+                    <span class="font-body text-[10px] uppercase tracking-wider hidden sm:block" :class="step >= 3 ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'">Details</span>
+                </div>
+                <!-- Step 4 -->
+                <div class="relative z-10 flex flex-col items-center gap-2 cursor-pointer transition-all" @click="step = 4">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-mono text-xs transition-colors"
+                         :class="step >= 4 ? 'bg-[var(--gold)] text-[var(--ink)]' : 'bg-[var(--ink-card)] text-[var(--text-muted)] border border-[var(--ink-border)]'">4</div>
+                    <span class="font-body text-[10px] uppercase tracking-wider hidden sm:block" :class="step >= 4 ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'">Media</span>
+                </div>
             </div>
+
+            <!-- Form Form -->
+            <form method="post" enctype="multipart/form-data" id="trip-form" class="card p-8 min-h-[400px] flex flex-col">
+                {% csrf_token %}
+                
+                <div class="flex-1">
+                    <!-- STEP 1 -->
+                    <div x-show="step === 1" x-transition.opacity.duration.300ms>
+                        <h3 class="font-display text-2xl font-medium mb-6">What shall we call this trip?</h3>
+                        <div class="form-group">
+                            <input type="text" name="name" x-model="name" class="input-field !text-xl !py-4" placeholder=" " required>
+                            <label class="form-label-floating">Trip Name *</label>
+                            {% if form.name.errors %}<p class="text-xs text-red-500 mt-1">{{ form.name.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- STEP 2 -->
+                    <div x-show="step === 2" x-transition.opacity.duration.300ms style="display: none;">
+                        <h3 class="font-display text-2xl font-medium mb-6">When are you going?</h3>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label text-[10px]">Start Date *</label>
+                                <input type="date" name="start_date" x-model="startDate" class="input-field" required>
+                                {% if form.start_date.errors %}<p class="text-xs text-red-500 mt-1">{{ form.start_date.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label text-[10px]">End Date *</label>
+                                <input type="date" name="end_date" x-model="endDate" class="input-field" required>
+                                {% if form.end_date.errors %}<p class="text-xs text-red-500 mt-1">{{ form.end_date.errors.0 }}</p>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3 -->
+                    <div x-show="step === 3" x-transition.opacity.duration.300ms style="display: none;">
+                        <h3 class="font-display text-2xl font-medium mb-6">Tell us more</h3>
+                        
+                        <div class="form-group mb-6">
+                            <textarea name="description" class="input-field !h-32 resize-none" placeholder="Add some notes about your trip goals...">{{ form.instance.description }}</textarea>
+                            {% if form.description.errors %}<p class="text-xs text-red-500 mt-1">{{ form.description.errors.0 }}</p>{% endif %}
+                        </div>
+
+                        <div class="form-group relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-mono">$</span>
+                            <input type="number" name="total_budget" x-model="budget" class="input-field !pl-8" placeholder=" " step="0.01">
+                            <label class="form-label-floating !left-[28px]">Total Budget</label>
+                            {% if form.total_budget.errors %}<p class="text-xs text-red-500 mt-1">{{ form.total_budget.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- STEP 4 -->
+                    <div x-show="step === 4" x-transition.opacity.duration.300ms style="display: none;">
+                        <h3 class="font-display text-2xl font-medium mb-6">Make it yours</h3>
+                        
+                        <!-- File Upload -->
+                        <div class="mb-8">
+                            <label class="form-label text-[10px] mb-2 block">Cover Photo</label>
+                            <div class="relative border-2 border-dashed border-[var(--ink-border)] rounded-[var(--radius-lg)] p-8 text-center hover:border-gold hover:bg-[rgba(232,168,56,0.02)] transition-colors cursor-pointer"
+                                 onclick="document.getElementById('cover_input').click()">
+                                <input type="file" id="cover_input" name="cover_photo" accept="image/*" class="hidden"
+                                       @change="if($event.target.files.length) { coverPreview = URL.createObjectURL($event.target.files[0]) }">
+                                <span class="text-3xl mb-2 block text-[var(--text-ghost)]">📸</span>
+                                <p class="text-sm text-[var(--text-primary)] font-medium">Click to upload image</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-1">JPEG, PNG, WEBP</p>
+                            </div>
+                        </div>
+
+                        <!-- Public Toggle -->
+                        <div class="flex items-center justify-between p-4 rounded-[var(--radius-md)] bg-black/5 dark:bg-white/5 border border-[var(--ink-border)]">
+                            <div>
+                                <p class="font-medium text-sm text-[var(--text-primary)]">Make trip public</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-1">Allow others to view and clone this itinerary via link.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="is_public" class="sr-only peer" x-model="isPublic">
+                                <div class="w-11 h-6 bg-[var(--ink)]-soft peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-primary after:border-[var(--ink-border)] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold border border-[var(--ink-border)]"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="mt-8 flex justify-between border-t border-[var(--ink-border)] pt-6">
+                    <button type="button" class="btn-ghost" x-show="step > 1" @click="step--">
+                        &larr; Back
+                    </button>
+                    <div x-show="step === 1" class="w-1"></div> <!-- Spacer to keep Next on right -->
+                    
+                    <button type="button" class="btn-primary" x-show="step < 4" @click="if(name) { step++ } else { alert('Please enter a trip name') }">
+                        Next &rarr;
+                    </button>
+                    
+                    <button type="submit" class="btn-primary" x-show="step === 4" x-data="{ loading: false }" @click="loading = true">
+                        <span x-show="!loading">{% if edit_mode %}Update Journey{% else %}Save Journey{% endif %} &rarr;</span>
+                        <span x-show="loading" class="animate-spin inline-block w-4 h-4 border-2 border-[var(--ink)] border-t-transparent rounded-full"></span>
+                    </button>
+                </div>
+            </form>
         </div>
 
-        <!-- Live Preview Card -->
-        <div class="hidden lg:block">
-            <p class="text-sm font-semibold mb-3" style="color: var(--color-text-muted);">LIVE PREVIEW</p>
-            <div class="card" style="position: sticky; top: 2rem;">
-                <div class="cover-container" style="height: 180px;">
+        <!-- LIVE PREVIEW PANEL -->
+        <div class="lg:col-span-2 hidden lg:block sticky top-24">
+            <p class="font-body text-[10px] uppercase tracking-widest text-gold mb-4 ml-1 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-[var(--gold)] dot-pulse"></span>
+                Live Preview
+            </p>
+            
+            <div class="card overflow-hidden">
+                <div class="relative h-56 overflow-hidden">
                     <template x-if="coverPreview">
-                        <img :src="coverPreview" alt="Cover" class="w-full h-full object-cover">
+                        <img :src="coverPreview" class="absolute inset-0 w-full h-full object-cover">
                     </template>
                     <template x-if="!coverPreview">
-                        <div class="w-full h-full flex items-center justify-center text-5xl" style="background: linear-gradient(135deg, #0D6E6E, #1A9494);">
-                            ✈️
+                        <div class="absolute inset-0 w-full h-full bg-[var(--ink)]-soft flex items-center justify-center border-b border-[var(--ink-border)]">
+                            <span class="font-display text-5xl opacity-10">✈️</span>
+                            <div class="absolute inset-0 p-6 flex flex-col justify-center items-center text-center opacity-50">
+                                <p class="text-xs text-[var(--text-muted)] font-body uppercase tracking-widest">TIP</p>
+                                <p class="text-sm text-[var(--text-primary)] mt-2">Add a cover photo to make your trip card stand out!</p>
+                            </div>
                         </div>
                     </template>
-                    <div class="cover-overlay"></div>
-                    <div class="absolute bottom-3 left-3 text-white">
-                        <h3 class="font-heading text-xl font-bold" x-text="name || 'My Amazing Trip'"></h3>
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-[var(--ink)] to-transparent opacity-90"></div>
+                    
+                    <div class="absolute top-4 right-4 flex gap-2">
+                        <span class="badge badge-teal backdrop-blur-md" x-show="isPublic">Public</span>
+                        <span class="badge badge-ghost backdrop-blur-md" x-show="!isPublic">Private</span>
                     </div>
                 </div>
-                <div class="card-body">
-                    <p class="text-sm" style="color: var(--color-text-muted);">
-                        📅 <span x-text="startDate || '...'"></span> → <span x-text="endDate || '...'"></span>
-                    </p>
-                    <div class="flex items-center gap-2 mt-3">
-                        <span class="badge badge-primary">0 cities</span>
-                        <template x-if="isPublic">
-                            <span class="badge badge-success">🌐 Public</span>
-                        </template>
-                        <template x-if="!isPublic">
-                            <span class="badge" style="background: rgba(0,0,0,0.1);">🔒 Private</span>
-                        </template>
+
+                <div class="p-6 relative -mt-6">
+                    <h3 class="font-display text-3xl font-medium text-[var(--text-primary)] mb-2 truncate" x-text="name || 'Untitled Journey'"></h3>
+                    <div class="flex items-center gap-3 font-mono text-xs text-[var(--text-muted)] mb-6">
+                        <span x-text="formattedStartDate"></span>
+                        <span class="text-gold">&rarr;</span>
+                        <span x-text="formattedEndDate"></span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 border-t border-[var(--ink-border)] pt-4">
+                        <div>
+                            <p class="text-[10px] font-body uppercase tracking-wider text-[var(--text-muted)] mb-1">Duration</p>
+                            <p class="font-mono text-[var(--text-primary)]"><span x-text="duration"></span> DAYS</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-body uppercase tracking-wider text-[var(--text-muted)] mb-1">Budget</p>
+                            <p class="font-mono text-[var(--text-primary)]">$<span x-text="budget || '0'"></span></p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea');
+        inputs.forEach(input => {
+            if (!input.classList.contains('input-field')) {
+                input.classList.add('input-field');
+            }
+            if (!input.getAttribute('placeholder')) {
+                input.setAttribute('placeholder', ' ');
+            }
+        });
+    });
+</script>
 {% endblock %}
