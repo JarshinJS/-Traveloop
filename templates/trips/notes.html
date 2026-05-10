@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Notes — {{ trip.name }}{% endblock %}
+{% block content %}
+<div class="fade-in">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="font-heading text-3xl">📝 Trip Notes</h1>
+            <p style="color: var(--color-text-muted);">{{ trip.name }}</p>
+        </div>
+        <a href="{% url 'trip_detail' pk=trip.pk %}" class="btn btn-outline btn-sm">← Back</a>
+    </div>
+
+    <!-- Add Note Form -->
+    <div class="card mb-6">
+        <div class="card-body" style="padding: 1.5rem;">
+            <h3 class="font-heading text-lg mb-3">✍️ Add a Note</h3>
+            <form method="post" id="add-note-form">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                    <div class="form-group mb-0">
+                        <label class="form-label">Title</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="form-group mb-0">
+                        <label class="form-label">Related Stop (optional)</label>
+                        {{ form.stop }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    {{ form.content }}
+                </div>
+                <button type="submit" class="btn btn-accent">💾 Save Note</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notes List -->
+    {% for note in notes %}
+    <div class="card mb-3 slide-up" style="animation-delay: {{ forloop.counter0 }}00ms;">
+        <div class="card-body">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h3 class="font-heading text-lg">{{ note.title }}</h3>
+                    <div class="flex items-center gap-2 mt-1 mb-2">
+                        <span class="text-sm" style="color: var(--color-text-muted);">{{ note.created_at|date:"M d, Y · g:i A" }}</span>
+                        {% if note.stop %}
+                        <span class="badge badge-primary">📍 {{ note.stop.city.name }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <button onclick="deleteNote({{ note.pk }})" class="btn btn-danger btn-sm">🗑️</button>
+            </div>
+            <p class="text-sm" style="white-space: pre-wrap;">{{ note.content }}</p>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-icon">📝</div>
+        <p>No notes yet. Add one above!</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function deleteNote(noteId) {
+    if (!confirm('Delete this note?')) return;
+    try {
+        const resp = await postJSON(`/notes/${noteId}/delete/`);
+        if (resp.status === 'ok') {
+            showToast('Note deleted.', 'success');
+            location.reload();
+        }
+    } catch(e) { showToast('Error.', 'error'); }
+}
+</script>
+{% endblock %}

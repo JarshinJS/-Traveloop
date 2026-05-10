@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Explore Cities{% endblock %}
+{% block content %}
+<div class="fade-in" x-data="{ showAddModal: false, selectedCity: null, selectedCityName: '' }">
+    <h1 class="font-heading text-3xl mb-6">🏙️ Explore Cities</h1>
+
+    <!-- Search & Filters -->
+    <div class="card mb-6">
+        <div class="card-body">
+            <form method="get" class="flex flex-col md:flex-row gap-3" id="city-search-form">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search cities, countries..." class="form-input flex-1">
+                <select name="region" class="form-input" style="max-width: 180px;" onchange="this.form.submit()">
+                    <option value="">All Regions</option>
+                    {% for r in regions %}
+                    <option value="{{ r }}" {% if selected_region == r %}selected{% endif %}>{{ r }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">🔍 Search</button>
+            </form>
+
+            <!-- Region Chips -->
+            <div class="flex flex-wrap gap-2 mt-3">
+                <a href="{% url 'city_search' %}" class="badge {% if not selected_region %}badge-primary{% else %}badge-accent{% endif %}" style="text-decoration: none; cursor: pointer;">All</a>
+                {% for r in regions %}
+                <a href="{% url 'city_search' %}?region={{ r }}" class="badge {% if selected_region == r %}badge-primary{% else %}badge-accent{% endif %}" style="text-decoration: none; cursor: pointer;">{{ r }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- City Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for city in cities %}
+        <div class="card slide-up" style="animation-delay: {{ forloop.counter0 }}50ms;">
+            <div class="cover-container" style="height: 160px;">
+                {% if city.image %}
+                <img src="{{ city.image.url }}" alt="{{ city.name }}">
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #0D6E6E, #1A9494);">🏙️</div>
+                {% endif %}
+                <div class="cover-overlay"></div>
+                <div class="absolute bottom-3 left-3 text-white">
+                    <h3 class="font-heading text-lg font-bold">{{ city.name }}</h3>
+                    <p class="text-sm opacity-90">{{ city.country }}</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-sm mb-3" style="color: var(--color-text-muted);">{{ city.description|truncatewords:15 }}</p>
+                <div class="flex items-center justify-between mb-3">
+                    <span class="badge badge-accent">${{ city.cost_index }}/day</span>
+                    <span class="text-sm" style="color: var(--color-text-muted);">⭐ {{ city.popularity_score }}/100</span>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{% url 'city_detail' pk=city.pk %}" class="btn btn-outline btn-sm flex-1">Details</a>
+                    {% if user.is_authenticated %}
+                    <button @click="showAddModal = true; selectedCity = {{ city.pk }}; selectedCityName = '{{ city.name }}'" class="btn btn-accent btn-sm">+ Trip</button>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-accent btn-sm">Login to Add</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full empty-state">
+            <div class="empty-icon">🔍</div>
+            <p>No cities found matching your search.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Add to Trip Modal -->
+    {% if user.is_authenticated %}
+    <template x-if="showAddModal">
+        <div class="modal-backdrop" @click.self="showAddModal = false">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="font-heading text-lg">Add <span x-text="selectedCityName"></span> to Trip</h3>
+                    <button @click="showAddModal = false" class="text-xl">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-4" style="color: var(--color-text-muted);">Select a trip or create a new one:</p>
+                    {% for trip in user.trips.all %}
+                    <a href="{% url 'itinerary_builder' pk=trip.pk %}" class="block p-3 mb-2 rounded hover:bg-gray-100" style="text-decoration: none; color: inherit; border: 1px solid var(--color-border);">
+                        <strong>{{ trip.name }}</strong>
+                        <span class="text-sm block" style="color: var(--color-text-muted);">{{ trip.start_date|date:"M d" }} — {{ trip.end_date|date:"M d, Y" }}</span>
+                    </a>
+                    {% empty %}
+                    <p style="color: var(--color-text-muted);">No trips yet.</p>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <a href="{% url 'trip_create' %}" class="btn btn-accent btn-sm">+ New Trip</a>
+                </div>
+            </div>
+        </div>
+    </template>
+    {% endif %}
+</div>
+{% endblock %}

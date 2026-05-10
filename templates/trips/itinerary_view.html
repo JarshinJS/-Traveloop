@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Itinerary — {{ trip.name }}{% endblock %}
+{% block content %}
+<div class="fade-in" x-data="{ viewMode: 'timeline' }">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="font-heading text-3xl">📖 {{ trip.name }}</h1>
+            <p style="color: var(--color-text-muted);">{{ trip.start_date|date:"M d" }} — {{ trip.end_date|date:"M d, Y" }}</p>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn btn-sm" :class="viewMode === 'timeline' ? 'btn-primary' : 'btn-outline'" @click="viewMode = 'timeline'">Timeline</button>
+            <button class="btn btn-sm" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline'" @click="viewMode = 'list'">List</button>
+            <a href="{% url 'itinerary_builder' pk=trip.pk %}" class="btn btn-accent btn-sm">✏️ Edit</a>
+        </div>
+    </div>
+
+    <!-- Timeline View -->
+    <div x-show="viewMode === 'timeline'" x-transition>
+        <div class="timeline">
+            {% for stop in stops %}
+            <div class="timeline-item mb-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="font-heading text-xl mb-1">📍 {{ stop.city.name }}, {{ stop.city.country }}</h3>
+                        <p class="text-sm mb-3" style="color: var(--color-text-muted);">{{ stop.arrival_date|date:"M d" }} — {{ stop.departure_date|date:"M d" }} · {{ stop.duration_days }} days</p>
+                        {% for ta in stop.trip_activities.all %}
+                        <div class="flex items-center justify-between p-2 mb-1 rounded" style="background: var(--color-bg);">
+                            <span class="text-sm font-medium">{{ ta.activity.name }}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="badge badge-accent" style="font-size: 0.7rem;">${{ ta.activity.estimated_cost }}</span>
+                                {% if ta.scheduled_time %}<span class="text-xs" style="color: var(--color-text-muted);">{{ ta.scheduled_time|time:"g:i A" }}</span>{% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-sm" style="color: var(--color-text-muted);">No activities planned.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state"><div class="empty-icon">📖</div><p>No stops in this itinerary yet.</p></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- List View -->
+    <div x-show="viewMode === 'list'" x-transition>
+        {% for stop in stops %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3 class="font-heading text-lg mb-2">{{ stop.city.name }}, {{ stop.city.country }}</h3>
+                <p class="text-sm mb-3" style="color: var(--color-text-muted);">{{ stop.arrival_date|date:"M d" }} — {{ stop.departure_date|date:"M d" }}</p>
+                <table class="w-full text-sm">
+                    <thead><tr style="border-bottom: 1px solid var(--color-border);"><th class="text-left p-2">Activity</th><th class="text-left p-2">Category</th><th class="text-right p-2">Cost</th><th class="text-right p-2">Duration</th></tr></thead>
+                    <tbody>
+                        {% for ta in stop.trip_activities.all %}
+                        <tr style="border-bottom: 1px solid var(--color-border);"><td class="p-2">{{ ta.activity.name }}</td><td class="p-2"><span class="badge badge-primary" style="font-size:0.7rem;">{{ ta.activity.get_category_display }}</span></td><td class="p-2 text-right">${{ ta.activity.estimated_cost }}</td><td class="p-2 text-right">{{ ta.activity.duration_hours }}h</td></tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="p-2" style="color: var(--color-text-muted);">No activities</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

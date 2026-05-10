@@ -1,0 +1,16 @@
+"""
+URL configuration for traveloop_project.
+"""
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('accounts/', include('accounts.urls')),
+    path('', include('trips.urls')),
+    path('cities/', include('cities.urls')),
+    path('activities/', include('activities.urls')),
+    path('admin-dashboard/', include('admin_dashboard.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

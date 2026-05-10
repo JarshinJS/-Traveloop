@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}My Trips{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <h1 class="font-heading text-3xl">✈️ My Trips</h1>
+        <div class="flex items-center gap-3">
+            <form method="get" class="flex items-center gap-2" id="trip-search-form">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search trips..." class="form-input" style="max-width: 240px;">
+                <button type="submit" class="btn btn-primary btn-sm">🔍</button>
+            </form>
+            <a href="{% url 'trip_create' %}" class="btn btn-accent" id="new-trip-btn">+ New Trip</a>
+        </div>
+    </div>
+
+    {% if trips %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for trip in trips %}
+        <div class="card slide-up" style="animation-delay: {{ forloop.counter0 }}00ms;">
+            <div class="cover-container">
+                {% if trip.cover_photo %}
+                <img src="{{ trip.cover_photo.url }}" alt="{{ trip.name }}">
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-5xl" style="background: linear-gradient(135deg, #0D6E6E, #1A9494);">
+                    🗺️
+                </div>
+                {% endif %}
+                <div class="cover-overlay"></div>
+                <div class="absolute top-3 right-3">
+                    {% if trip.is_public %}
+                    <span class="badge badge-success">🌐 Public</span>
+                    {% else %}
+                    <span class="badge" style="background: rgba(0,0,0,0.5); color: #fff;">🔒 Private</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <h3 class="font-heading text-xl mb-1">{{ trip.name }}</h3>
+                <p class="text-sm mb-3" style="color: var(--color-text-muted);">
+                    📅 {{ trip.start_date|date:"M d" }} — {{ trip.end_date|date:"M d, Y" }}
+                </p>
+
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="badge badge-primary">{{ trip.stops.count }} cities</span>
+                    <span class="badge badge-accent">{{ trip.duration_days }} days</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'trip_detail' pk=trip.pk %}" class="btn btn-primary btn-sm flex-1">View</a>
+                    <a href="{% url 'trip_edit' pk=trip.pk %}" class="btn btn-outline btn-sm">✏️</a>
+                    <a href="{% url 'trip_delete' pk=trip.pk %}" class="btn btn-danger btn-sm">🗑️</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-icon">🧳</div>
+        <p>You haven't planned any trips yet!</p>
+        <a href="{% url 'trip_create' %}" class="btn btn-accent btn-lg" id="empty-new-trip-btn">
+            ✈️ Plan Your First Trip
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}Analytics Dashboard{% endblock %}
+{% block content %}
+<div class="fade-in">
+    <h1 class="font-heading text-3xl mb-6">📊 Analytics Dashboard</h1>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_users }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card" style="border-left-color: var(--color-accent);">
+            <div class="stat-value" style="color: var(--color-accent);">{{ total_trips }}</div>
+            <div class="stat-label">Total Trips</div>
+        </div>
+        <div class="stat-card" style="border-left-color: var(--color-success);">
+            <div class="stat-value" style="color: var(--color-success);">{{ public_trips }}</div>
+            <div class="stat-label">Public Trips</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_cities }}</div>
+            <div class="stat-label">Cities in DB</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="font-heading text-lg mb-4">Trips Created per Month</h3>
+                <canvas id="tripsChart" height="250"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h3 class="font-heading text-lg mb-4">Top Cities by Stops</h3>
+                <canvas id="citiesChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Users -->
+        <div class="card">
+            <div class="card-body">
+                <h3 class="font-heading text-lg mb-4">Recent Users</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead><tr style="border-bottom: 2px solid var(--color-border);"><th class="text-left p-2">User</th><th class="text-left p-2">Email</th><th class="text-right p-2">Trips</th><th class="text-right p-2">Joined</th></tr></thead>
+                        <tbody>
+                            {% for u in recent_users %}
+                            <tr style="border-bottom: 1px solid var(--color-border);"><td class="p-2">{{ u.username }}</td><td class="p-2">{{ u.email }}</td><td class="p-2 text-right">{{ u.trip_count }}</td><td class="p-2 text-right">{{ u.date_joined|date:"M d, Y" }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Activities -->
+        <div class="card">
+            <div class="card-body">
+                <h3 class="font-heading text-lg mb-4">Top Activities</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead><tr style="border-bottom: 2px solid var(--color-border);"><th class="text-left p-2">Activity</th><th class="text-left p-2">City</th><th class="text-right p-2">Uses</th></tr></thead>
+                        <tbody>
+                            {% for a in top_activities %}
+                            <tr style="border-bottom: 1px solid var(--color-border);"><td class="p-2">{{ a.name }}</td><td class="p-2">{{ a.city.name }}</td><td class="p-2 text-right">{{ a.usage_count }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ml = {{ month_labels|safe }};
+    const mc = {{ month_counts|safe }};
+    if (ml.length > 0) {
+        new Chart(document.getElementById('tripsChart'), {
+            type: 'line', data: { labels: ml, datasets: [{ label: 'Trips', data: mc, borderColor: '#0D6E6E', backgroundColor: 'rgba(13,110,110,0.1)', fill: true, tension: 0.4, borderWidth: 2 }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    const cl = {{ city_labels|safe }};
+    const cc = {{ city_counts|safe }};
+    if (cl.length > 0) {
+        new Chart(document.getElementById('citiesChart'), {
+            type: 'bar', data: { labels: cl, datasets: [{ label: 'Stops', data: cc, backgroundColor: '#F5A623', borderRadius: 6 }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } }, indexAxis: 'y' }
+        });
+    }
+});
+</script>
+{% endblock %}

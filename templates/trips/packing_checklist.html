@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Packing — {{ trip.name }}{% endblock %}
+{% block content %}
+<div class="fade-in">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="font-heading text-3xl">🧳 Packing Checklist</h1>
+            <p style="color: var(--color-text-muted);">{{ trip.name }}</p>
+        </div>
+        <a href="{% url 'trip_detail' pk=trip.pk %}" class="btn btn-outline btn-sm">← Back</a>
+    </div>
+
+    <!-- Progress -->
+    <div class="card mb-6">
+        <div class="card-body">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold">{{ packed_count }} of {{ total_count }} items packed</span>
+                {% if total_count > 0 %}
+                <span class="badge badge-primary">{% widthratio packed_count total_count 100 %}%</span>
+                {% endif %}
+            </div>
+            <div class="progress-bar" style="height: 0.75rem;">
+                {% if total_count > 0 %}
+                <div class="progress-fill" style="width: {% widthratio packed_count total_count 100 %}%;"></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Item Form -->
+    <div class="card mb-6">
+        <div class="card-body">
+            <h3 class="font-heading text-lg mb-3">➕ Add Item</h3>
+            <form method="post" class="flex flex-col md:flex-row gap-3" id="add-packing-form">
+                {% csrf_token %}
+                <div class="flex-1">{{ form.name }}</div>
+                <div style="min-width: 160px;">{{ form.category }}</div>
+                <button type="submit" class="btn btn-accent">Add</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Grouped Items -->
+    {% for category_name, items in categories.items %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3 class="font-heading text-lg mb-3">{{ category_name }}</h3>
+            {% for item in items %}
+            <div class="flex items-center justify-between p-2 mb-1 rounded" style="background: var(--color-bg);" id="packing-{{ item.pk }}">
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" class="checkbox-custom" {% if item.is_packed %}checked{% endif %}
+                           onchange="togglePacked({{ item.pk }}, this)">
+                    <span class="{% if item.is_packed %}line-through{% endif %}" style="{% if item.is_packed %}color: var(--color-text-muted);{% endif %}" id="packing-text-{{ item.pk }}">
+                        {{ item.name }}
+                    </span>
+                </div>
+                <button onclick="deletePackingItem({{ item.pk }})" class="text-sm" style="color: var(--color-danger); cursor: pointer;">✕</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <p>No items in your packing list yet.</p>
+    </div>
+    {% endfor %}
+
+    {% if total_count > 0 %}
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <input type="hidden" name="reset" value="1">
+        <button type="submit" class="btn btn-outline btn-sm" onclick="return confirm('Reset all items to unpacked?')">🔄 Reset Checklist</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function togglePacked(itemId, checkbox) {
+    try {
+        const resp = await postJSON(`/packing/${itemId}/toggle/`);
+        if (resp.status === 'ok') {
+            const text = document.getElementById(`packing-text-${itemId}`);
+            if (resp.is_packed) { text.classList.add('line-through'); text.style.color = 'var(--color-text-muted)'; }
+            else { text.classList.remove('line-through'); text.style.color = ''; }
+        }
+    } catch(e) { showToast('Error toggling item.', 'error'); }
+}
+
+async function deletePackingItem(itemId) {
+    if (!confirm('Delete this item?')) return;
+    // We'll just reload after removing
+    const form = document.createElement('form');
+    form.method = 'POST'; form.action = '';
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    form.innerHTML = `<input name="csrfmiddlewaretoken" value="${csrf}"><input name="delete_item" value="${itemId}">`;
+    document.body.appendChild(form); form.submit();
+}
+</script>
+{% endblock %}

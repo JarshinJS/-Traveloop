@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto fade-in">
+    <h1 class="font-heading text-3xl mb-6">👤 My Profile</h1>
+
+    <div class="card mb-6">
+        <div class="card-body" style="padding: 2rem;">
+            <form method="post" enctype="multipart/form-data" id="profile-form" x-data="{ avatarPreview: '{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% endif %}' }">
+                {% csrf_token %}
+
+                <!-- Avatar -->
+                <div class="flex items-center gap-6 mb-8">
+                    <div class="relative">
+                        <div class="w-24 h-24 rounded-full overflow-hidden" style="background: var(--color-border);">
+                            <img x-show="avatarPreview" :src="avatarPreview" alt="Avatar" class="w-full h-full object-cover">
+                            <div x-show="!avatarPreview" class="w-full h-full flex items-center justify-center text-4xl" style="color: var(--color-text-muted);">👤</div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="btn btn-outline btn-sm cursor-pointer">
+                            📷 Change Photo
+                            <input type="file" name="avatar" accept="image/*" class="hidden"
+                                   @change="avatarPreview = URL.createObjectURL($event.target.files[0])">
+                        </label>
+                        <p class="text-sm mt-1" style="color: var(--color-text-muted);">JPG, PNG. Max 2MB.</p>
+                    </div>
+                </div>
+
+                <!-- User fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        {{ user_form.first_name }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        {{ user_form.last_name }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    {{ user_form.email }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Language Preference</label>
+                    {{ profile_form.language_preference }}
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="save-profile-btn">
+                    💾 Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Saved Destinations -->
+    {% if user.profile.saved_destinations.exists %}
+    <div class="card mb-6">
+        <div class="card-body">
+            <h3 class="font-heading text-xl mb-4">❤️ Saved Destinations</h3>
+            <div class="flex flex-wrap gap-2">
+                {% for city in user.profile.saved_destinations.all %}
+                <span class="badge badge-primary">{{ city.name }}, {{ city.country }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Danger Zone -->
+    <div class="card" style="border: 1px solid var(--color-danger);">
+        <div class="card-body" x-data="{ showDeleteModal: false }">
+            <h3 class="font-heading text-xl mb-2" style="color: var(--color-danger);">⚠️ Danger Zone</h3>
+            <p class="mb-4" style="color: var(--color-text-muted); font-size: 0.9rem;">
+                Permanently delete your account and all associated data.
+            </p>
+            <button @click="showDeleteModal = true" class="btn btn-danger btn-sm" id="delete-account-btn">
+                🗑️ Delete Account
+            </button>
+
+            <!-- Delete Modal -->
+            <template x-if="showDeleteModal">
+                <div class="modal-backdrop" @click.self="showDeleteModal = false">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 class="font-heading text-lg">Confirm Account Deletion</h3>
+                            <button @click="showDeleteModal = false" class="text-xl">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button @click="showDeleteModal = false" class="btn btn-outline btn-sm">Cancel</button>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="delete_account" value="1">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete Forever</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+{% endblock %}

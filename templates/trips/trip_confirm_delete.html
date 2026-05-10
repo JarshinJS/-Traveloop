@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Delete {{ trip.name }}{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto mt-12 fade-in">
+    <div class="card">
+        <div class="card-body" style="padding: 2rem; text-align: center;">
+            <span class="text-5xl mb-4 block">⚠️</span>
+            <h2 class="font-heading text-2xl mb-2">Delete Trip</h2>
+            <p class="mb-6" style="color: var(--color-text-muted);">
+                Are you sure you want to delete <strong>"{{ trip.name }}"</strong>?<br>
+                This will remove all stops, activities, packing items, and notes.
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex items-center justify-center gap-3">
+                    <a href="{% url 'trip_detail' pk=trip.pk %}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-danger">🗑️ Delete Forever</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

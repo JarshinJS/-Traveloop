@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}{{ trip.name }} — Public Itinerary{% endblock %}
+{% block content %}
+<div class="min-h-screen" style="background: var(--color-bg);">
+    <!-- Public Header -->
+    <div class="hero mb-6" style="border-radius: 0 0 var(--radius-xl) var(--radius-xl);">
+        <div class="max-w-4xl mx-auto text-center py-8">
+            <h1 class="font-heading text-3xl md:text-4xl mb-2">{{ trip.name }}</h1>
+            <p class="opacity-80 mb-4">{{ trip.description }}</p>
+            <div class="flex items-center justify-center gap-4 text-sm">
+                <span>📅 {{ trip.start_date|date:"M d" }} — {{ trip.end_date|date:"M d, Y" }}</span>
+                <span>🗓️ {{ trip.duration_days }} days</span>
+                <span>🏙️ {{ stops.count }} cities</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 pb-12">
+        <!-- Itinerary -->
+        <div class="timeline">
+            {% for stop in stops %}
+            <div class="timeline-item mb-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="font-heading text-xl mb-1">📍 {{ stop.city.name }}, {{ stop.city.country }}</h3>
+                        <p class="text-sm mb-3" style="color: var(--color-text-muted);">
+                            {{ stop.arrival_date|date:"M d" }} — {{ stop.departure_date|date:"M d" }} · {{ stop.duration_days }} days
+                        </p>
+                        {% for ta in stop.trip_activities.all %}
+                        <div class="flex items-center justify-between p-2 mb-1 rounded" style="background: var(--color-bg);">
+                            <span class="text-sm font-medium">{{ ta.activity.name }}</span>
+                            <span class="badge badge-accent" style="font-size:0.7rem;">${{ ta.activity.estimated_cost }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Share & Copy -->
+        <div class="card mt-8">
+            <div class="card-body text-center">
+                <h3 class="font-heading text-xl mb-4">📤 Share This Itinerary</h3>
+                <div class="flex items-center justify-center gap-3 flex-wrap">
+                    <button onclick="copyToClipboard('{{ share_url }}')" class="btn btn-primary btn-sm">📋 Copy Link</button>
+                    <a href="https://wa.me/?text={{ share_url|urlencode }}" target="_blank" class="btn btn-sm" style="background: #25D366; color: #fff;">WhatsApp</a>
+                    <a href="https://twitter.com/intent/tweet?url={{ share_url|urlencode }}&text=Check+out+my+travel+itinerary!" target="_blank" class="btn btn-sm" style="background: #1DA1F2; color: #fff;">𝕏 / Twitter</a>
+                </div>
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'copy_trip' token=trip.share_token %}" class="mt-4">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-accent">📋 Copy This Trip to My Account</button>
+                </form>
+                {% else %}
+                <p class="mt-4 text-sm" style="color: var(--color-text-muted);">
+                    <a href="{% url 'login' %}" style="color: var(--color-primary);">Log in</a> to copy this trip.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Attribution -->
+        <p class="text-center mt-6 text-sm" style="color: var(--color-text-muted);">
+            Created by <strong>{{ trip.user.username }}</strong> · Powered by 🌍 Traveloop
+        </p>
+    </div>
+</div>
+{% endblock %}

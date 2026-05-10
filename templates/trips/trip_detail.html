@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% block title %}{{ trip.name }}{% endblock %}
+
+{% block content %}
+<div class="fade-in" x-data="{ activeTab: 'overview' }">
+    <!-- Cover Banner -->
+    <div class="relative rounded-xl overflow-hidden mb-6" style="height: 250px;">
+        {% if trip.cover_photo %}
+        <img src="{{ trip.cover_photo.url }}" alt="{{ trip.name }}" class="w-full h-full object-cover">
+        {% else %}
+        <div class="w-full h-full flex items-center justify-center text-6xl" style="background: linear-gradient(135deg, #0a5c5c, #1A9494);">
+            🗺️
+        </div>
+        {% endif %}
+        <div class="absolute inset-0" style="background: linear-gradient(transparent 40%, rgba(0,0,0,0.7));"></div>
+        <div class="absolute bottom-4 left-6 text-white">
+            <h1 class="font-heading text-3xl md:text-4xl mb-1">{{ trip.name }}</h1>
+            <p class="opacity-90">{{ trip.description|truncatewords:20 }}</p>
+        </div>
+        <div class="absolute top-4 right-4 flex gap-2">
+            <a href="{% url 'trip_edit' pk=trip.pk %}" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: #fff; backdrop-filter: blur(4px);">✏️ Edit</a>
+            {% if trip.is_public %}
+            <button onclick="copyToClipboard('{{ share_url }}')" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: #fff; backdrop-filter: blur(4px);">🔗 Share</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Trip Meta Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card">
+            <div class="stat-value text-xl">{{ trip.duration_days }}</div>
+            <div class="stat-label">Days</div>
+        </div>
+        <div class="stat-card" style="border-left-color: var(--color-accent);">
+            <div class="stat-value text-xl" style="color: var(--color-accent);">{{ stops.count }}</div>
+            <div class="stat-label">Cities</div>
+        </div>
+        <div class="stat-card" style="border-left-color: var(--color-success);">
+            <div class="stat-value text-xl" style="color: var(--color-success);">${{ total_estimated|floatformat:0 }}</div>
+            <div class="stat-label">Est. Cost</div>
+        </div>
+        <div class="stat-card" style="border-left-color: {% if over_budget %}var(--color-danger){% else %}var(--color-primary){% endif %};">
+            <div class="stat-value text-xl" style="color: {% if over_budget %}var(--color-danger){% else %}var(--color-primary){% endif %};">${{ trip.total_budget|floatformat:0 }}</div>
+            <div class="stat-label">Budget</div>
+        </div>
+    </div>
+
+    {% if over_budget %}
+    <div class="mb-4 p-4 rounded-lg flex items-center gap-3" style="background: rgba(245,166,35,0.15); border: 1px solid var(--color-accent);">
+        ⚠️ <span class="font-semibold" style="color: var(--color-accent-dark);">Over budget!</span>
+        <span style="color: var(--color-text-muted);">Estimated cost exceeds your budget by ${{ total_estimated|floatformat:0 }}.</span>
+    </div>
+    {% endif %}
+
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-6 overflow-x-auto border-b" style="border-color: var(--color-border);">
+        <button class="tab-btn" :class="{ 'active': activeTab === 'overview' }" @click="activeTab = 'overview'">📋 Overview</button>
+        <button class="tab-btn" :class="{ 'active': activeTab === 'itinerary' }" @click="activeTab = 'itinerary'">🗓️ Itinerary</button>
+        <button class="tab-btn" :class="{ 'active': activeTab === 'budget' }" @click="activeTab = 'budget'">💰 Budget</button>
+        <button class="tab-btn" :class="{ 'active': activeTab === 'packing' }" @click="activeTab = 'packing'">🧳 Packing</button>
+        <button class="tab-btn" :class="{ 'active': activeTab === 'notes' }" @click="activeTab = 'notes'">📝 Notes</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div x-show="activeTab === 'overview'" x-transition>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Stops Summary -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-heading text-xl">🗺️ Trip Stops</h3>
+                        <a href="{% url 'itinerary_builder' pk=trip.pk %}" class="btn btn-primary btn-sm">Build →</a>
+                    </div>
+                    {% if stops %}
+                    <div class="timeline">
+                        {% for stop in stops %}
+                        <div class="timeline-item">
+                            <h4 class="font-semibold">{{ stop.city.name }}, {{ stop.city.country }}</h4>
+                            <p class="text-sm" style="color: var(--color-text-muted);">
+                                {{ stop.arrival_date|date:"M d" }} — {{ stop.departure_date|date:"M d" }} · {{ stop.duration_days }} days
+                            </p>
+                            <p class="text-sm mt-1">{{ stop.trip_activities.count }} activities</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p style="color: var(--color-text-muted);">No stops added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="space-y-4">
+                <a href="{% url 'itinerary_view' pk=trip.pk %}" class="card block" style="text-decoration: none; color: inherit;">
+                    <div class="card-body flex items-center gap-4">
+                        <span class="text-3xl">📖</span>
+                        <div>
+                            <h3 class="font-heading text-lg">View Itinerary</h3>
+                            <p class="text-sm" style="color: var(--color-text-muted);">See your complete trip timeline</p>
+                        </div>
+                    </div>
+                </a>
+                <a href="{% url 'trip_budget' pk=trip.pk %}" class="card block" style="text-decoration: none; color: inherit;">
+                    <div class="card-body flex items-center gap-4">
+                        <span class="text-3xl">💰</span>
+                        <div>
+                            <h3 class="font-heading text-lg">Budget Breakdown</h3>
+                            <p class="text-sm" style="color: var(--color-text-muted);">Track costs with charts</p>
+                        </div>
+                    </div>
+                </a>
+                <a href="{% url 'packing_checklist' pk=trip.pk %}" class="card block" style="text-decoration: none; color: inherit;">
+                    <div class="card-body flex items-center gap-4">
+                        <span class="text-3xl">🧳</span>
+                        <div>
+                            <h3 class="font-heading text-lg">Packing Checklist</h3>
+                            <p class="text-sm" style="color: var(--color-text-muted);">{{ packed_count }}/{{ total_packing }} items packed</p>
+                        </div>
+                    </div>
+                </a>
+                <a href="{% url 'trip_notes' pk=trip.pk %}" class="card block" style="text-decoration: none; color: inherit;">
+                    <div class="card-body flex items-center gap-4">
+                        <span class="text-3xl">📝</span>
+                        <div>
+                            <h3 class="font-heading text-lg">Trip Notes</h3>
+                            <p class="text-sm" style="color: var(--color-text-muted);">{{ notes.count }} notes</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itinerary Tab -->
+    <div x-show="activeTab === 'itinerary'" x-transition>
+        <div class="flex justify-end mb-4 gap-2">
+            <a href="{% url 'itinerary_builder' pk=trip.pk %}" class="btn btn-primary btn-sm">🛠️ Edit Builder</a>
+            <a href="{% url 'itinerary_view' pk=trip.pk %}" class="btn btn-outline btn-sm">📖 Full View</a>
+        </div>
+        {% for stop in stops %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-heading text-lg">📍 {{ stop.city.name }}, {{ stop.city.country }}</h3>
+                    <span class="badge badge-primary">{{ stop.duration_days }} days</span>
+                </div>
+                <p class="text-sm mb-3" style="color: var(--color-text-muted);">
+                    {{ stop.arrival_date|date:"M d" }} — {{ stop.departure_date|date:"M d, Y" }}
+                </p>
+                {% if stop.trip_activities.all %}
+                <div class="space-y-2">
+                    {% for ta in stop.trip_activities.all %}
+                    <div class="flex items-center justify-between p-2 rounded" style="background: var(--color-bg);">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm">{{ ta.activity.name }}</span>
+                            <span class="badge badge-accent" style="font-size: 0.7rem;">${{ ta.activity.estimated_cost }}</span>
+                        </div>
+                        {% if ta.scheduled_time %}
+                        <span class="text-sm" style="color: var(--color-text-muted);">{{ ta.scheduled_time|time:"g:i A" }}</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm" style="color: var(--color-text-muted);">No activities yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon">🗓️</div>
+            <p>No stops in this trip yet.</p>
+            <a href="{% url 'itinerary_builder' pk=trip.pk %}" class="btn btn-accent">Start Building →</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Budget Tab -->
+    <div x-show="activeTab === 'budget'" x-transition>
+        <a href="{% url 'trip_budget' pk=trip.pk %}" class="btn btn-primary mb-4">📊 View Full Budget Breakdown</a>
+        <div class="card">
+            <div class="card-body">
+                <h3 class="font-heading text-xl mb-4">Budget Summary</h3>
+                <div class="mb-4">
+                    <div class="flex justify-between mb-2">
+                        <span>Estimated: <strong>${{ total_estimated|floatformat:0 }}</strong></span>
+                        <span>Budget: <strong>${{ trip.total_budget|floatformat:0 }}</strong></span>
+                    </div>
+                    {% if trip.total_budget > 0 %}
+                    <div class="progress-bar">
+                        {% widthratio total_estimated trip.total_budget 100 as pct %}
+                        <div class="progress-fill" style="width: min({{ pct|default:0 }}%, 100%); {% if over_budget %}background: linear-gradient(90deg, var(--color-danger), #ff6b6b);{% endif %}"></div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Packing Tab -->
+    <div x-show="activeTab === 'packing'" x-transition>
+        <a href="{% url 'packing_checklist' pk=trip.pk %}" class="btn btn-primary mb-4">🧳 Manage Packing List</a>
+        <div class="card">
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-heading text-xl">Packing Progress</h3>
+                    <span class="badge badge-primary">{{ packed_count }}/{{ total_packing }}</span>
+                </div>
+                {% if total_packing > 0 %}
+                <div class="progress-bar" style="height: 0.75rem;">
+                    <div class="progress-fill" style="width: {% widthratio packed_count total_packing 100 %}%;"></div>
+                </div>
+                {% else %}
+                <p style="color: var(--color-text-muted);">No items added yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Tab -->
+    <div x-show="activeTab === 'notes'" x-transition>
+        <a href="{% url 'trip_notes' pk=trip.pk %}" class="btn btn-primary mb-4">📝 Manage Notes</a>
+        {% for note in notes %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <h4 class="font-semibold">{{ note.title }}</h4>
+                    <span class="text-sm" style="color: var(--color-text-muted);">{{ note.created_at|date:"M d, Y" }}</span>
+                </div>
+                <p class="mt-2 text-sm" style="color: var(--color-text-muted);">{{ note.content|truncatewords:30 }}</p>
+                {% if note.stop %}
+                <span class="badge badge-primary mt-2">📍 {{ note.stop.city.name }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <p style="color: var(--color-text-muted);">No notes yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

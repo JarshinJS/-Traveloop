@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Traveloop{% endblock %} — Travel Planner</title>
+    <meta name="description" content="{% block meta_description %}Plan your perfect multi-city trip with Traveloop. Build itineraries, track budgets, and share your travel plans.{% endblock %}">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: {
+                            900: '#0a5c5c',
+                            800: '#0D6E6E',
+                            700: '#11807F',
+                            600: '#1A9494',
+                            500: '#22A8A8',
+                        },
+                        amber: {
+                            500: '#F5A623',
+                            600: '#D4891A',
+                            400: '#FFD07A',
+                        },
+                        offwhite: '#F9F7F3',
+                        dark: '#1A1A2E',
+                    },
+                    fontFamily: {
+                        heading: ['Playfair Display', 'serif'],
+                        body: ['DM Sans', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="font-body bg-offwhite text-dark min-h-screen" x-data="{ sidebarOpen: false }">
+
+    {% if user.is_authenticated %}
+    <!-- Mobile Hamburger -->
+    <button class="hamburger-btn" @click="sidebarOpen = !sidebarOpen" aria-label="Toggle menu">
+        <span x-text="sidebarOpen ? '✕' : '☰'">☰</span>
+    </button>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" :class="{ 'open': sidebarOpen }" @click.outside="sidebarOpen = false" id="main-nav">
+        <div class="sidebar-logo">
+            🌍 <span>Traveloop</span>
+        </div>
+        <div class="sidebar-nav">
+            <a href="{% url 'dashboard' %}" class="{% if request.path == '/' or request.path == '/dashboard/' %}active{% endif %}">
+                <span class="nav-icon">🏠</span> Dashboard
+            </a>
+            <a href="{% url 'trip_list' %}" class="{% if '/trips' in request.path %}active{% endif %}">
+                <span class="nav-icon">✈️</span> My Trips
+            </a>
+            <a href="{% url 'city_search' %}" class="{% if '/cities' in request.path %}active{% endif %}">
+                <span class="nav-icon">🏙️</span> Explore Cities
+            </a>
+            <a href="{% url 'activity_search' %}" class="{% if '/activities' in request.path %}active{% endif %}">
+                <span class="nav-icon">🎯</span> Activities
+            </a>
+            {% if user.is_staff %}
+            <a href="{% url 'admin_analytics' %}" class="{% if '/admin-dashboard' in request.path %}active{% endif %}">
+                <span class="nav-icon">📊</span> Analytics
+            </a>
+            {% endif %}
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.15); padding: 1rem 0;">
+            <a href="{% url 'profile' %}" class="sidebar-nav {% if '/accounts/profile' in request.path %}active{% endif %}" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.25rem;color:rgba(255,255,255,0.8);text-decoration:none;font-size:0.95rem;font-weight:500;transition:all 0.2s ease;">
+                <span class="nav-icon">👤</span> {{ user.username }}
+            </a>
+            <form method="post" action="{% url 'logout' %}" style="display: block; width: 100%;">
+                {% csrf_token %}
+                <button type="submit" style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.25rem;color:rgba(255,255,255,0.6);text-decoration:none;font-size:0.9rem;transition:all 0.2s ease; background:none; border:none; width:100%; text-align:left; cursor:pointer;">
+                    <span class="nav-icon">🚪</span> Logout
+                </button>
+            </form>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- Toast Messages -->
+    <div class="toast-container" id="toast-container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast toast-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}" 
+                     x-data="{ show: true }" 
+                     x-show="show" 
+                     x-init="setTimeout(() => show = false, 4000)"
+                     x-transition>
+                    {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}❌{% elif message.tags == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="{% if user.is_authenticated %}main-content{% else %}{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Custom JS -->
+    <script src="{% static 'js/app.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

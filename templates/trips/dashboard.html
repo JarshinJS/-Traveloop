@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <!-- Hero Banner -->
+    <div class="hero mb-8">
+        <h1 class="font-heading text-3xl md:text-4xl mb-2">
+            Welcome back, {{ user.username }}! 🌍
+        </h1>
+        <p class="text-teal-100 text-lg mb-6">Where to next?</p>
+        <a href="{% url 'trip_create' %}" class="btn btn-accent btn-lg" id="plan-trip-btn">
+            ✈️ Plan New Trip
+        </a>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_trips }}</div>
+            <div class="stat-label">Total Trips</div>
+        </div>
+        <div class="stat-card" style="border-left-color: var(--color-accent);">
+            <div class="stat-value" style="color: var(--color-accent);">{{ countries_count }}</div>
+            <div class="stat-label">Countries Explored</div>
+        </div>
+        <div class="stat-card" style="border-left-color: var(--color-success);">
+            {% if countdown is not None %}
+            <div class="stat-value" style="color: var(--color-success);">{{ countdown }}</div>
+            <div class="stat-label">Days until {{ next_trip.name }}</div>
+            {% else %}
+            <div class="stat-value" style="color: var(--color-text-muted);">—</div>
+            <div class="stat-label">No upcoming trips</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Trips -->
+    {% if recent_trips %}
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-heading text-2xl">Recent Trips</h2>
+            <a href="{% url 'trip_list' %}" class="btn btn-outline btn-sm">View All →</a>
+        </div>
+        <div class="scroll-x">
+            <div class="flex gap-4" style="min-width: max-content;">
+                {% for trip in recent_trips %}
+                <a href="{% url 'trip_detail' pk=trip.pk %}" class="card" style="min-width: 280px; max-width: 320px; text-decoration: none; color: inherit;">
+                    <div class="cover-container" style="height: 150px;">
+                        {% if trip.cover_photo %}
+                        <img src="{{ trip.cover_photo.url }}" alt="{{ trip.name }}">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-5xl" style="background: linear-gradient(135deg, #0D6E6E, #1A9494);">
+                            ✈️
+                        </div>
+                        {% endif %}
+                        <div class="cover-overlay"></div>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="font-heading text-lg mb-1">{{ trip.name }}</h3>
+                        <p class="text-sm" style="color: var(--color-text-muted);">
+                            📅 {{ trip.start_date|date:"M d" }} — {{ trip.end_date|date:"M d, Y" }}
+                        </p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="badge badge-primary">{{ trip.stops.count }} cities</span>
+                            {% if trip.is_public %}
+                            <span class="badge badge-success">Public</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recommended Destinations -->
+    <div>
+        <h2 class="font-heading text-2xl mb-4">🔥 Recommended Destinations</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for city in recommended_cities %}
+            <a href="{% url 'city_detail' pk=city.pk %}" class="card" style="text-decoration: none; color: inherit;">
+                <div class="cover-container" style="height: 140px;">
+                    {% if city.image %}
+                    <img src="{{ city.image.url }}" alt="{{ city.name }}">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-4xl" style="background: linear-gradient(135deg, #F5A623, #D4891A);">
+                        🏙️
+                    </div>
+                    {% endif %}
+                    <div class="cover-overlay"></div>
+                    <div class="absolute bottom-3 left-3 text-white">
+                        <h3 class="font-heading text-lg font-bold">{{ city.name }}</h3>
+                        <p class="text-sm opacity-90">{{ city.country }}</p>
+                    </div>
+                </div>
+                <div class="card-body flex items-center justify-between">
+                    <span class="badge badge-accent">${{ city.cost_index }}/day</span>
+                    <div class="flex items-center gap-1 text-sm" style="color: var(--color-accent);">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= city.popularity_score|floatformat:0|add:"0" %}⭐{% endif %}
+                        {% endfor %}
+                        <span class="ml-1" style="color: var(--color-text-muted);">{{ city.popularity_score }}/100</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

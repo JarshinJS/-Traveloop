@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4" style="background: linear-gradient(135deg, #0a5c5c 0%, #0D6E6E 40%, #1A9494 100%);">
+    <div class="w-full max-w-md">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <h1 class="font-heading text-4xl text-white mb-2">🌍 Traveloop</h1>
+            <p class="text-teal-200 text-lg">Welcome back, traveler!</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="card" style="border-radius: 1rem;">
+            <div class="card-body" style="padding: 2rem;">
+                <h2 class="font-heading text-2xl text-center mb-6" style="color: var(--color-text);">Sign In</h2>
+
+                {% if form.errors %}
+                <div class="mb-4 p-3 rounded-lg" style="background: rgba(239,68,68,0.1); color: var(--color-danger); font-size: 0.9rem;">
+                    ❌ Invalid username or password. Please try again.
+                </div>
+                {% endif %}
+
+                <form method="post" id="login-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="id_username">👤 Username</label>
+                        {{ form.username }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="id_password">🔒 Password</label>
+                        {{ form.password }}
+                    </div>
+
+                    <button type="submit" class="btn btn-accent btn-lg w-full mt-4" id="login-btn">
+                        Login →
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <p style="color: var(--color-text-muted); font-size: 0.9rem;">
+                        Don't have an account? 
+                        <a href="{% url 'signup' %}" class="font-semibold" style="color: var(--color-primary);">Sign Up</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

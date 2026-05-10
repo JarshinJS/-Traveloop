@@ -1,0 +1,442 @@
+import json
+from decimal import Decimal
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from django.contrib import messages
+from django.db.models import Count, Sum
+from django.utils import timezone
+
+from .models import Trip, TripStop, TripActivity, PackingItem, TripNote
+from .forms import TripForm, TripStopForm, PackingItemForm, TripNoteForm
+from cities.models import City
+from activities.models import Activity
+
+
+@login_required
+def dashboard_view(request):
+    user_trips = Trip.objects.filter(user=request.user).prefetch_related('stops__city')
+    upcoming_trips = user_trips.filter(start_date__gte=timezone.now().date()).order_by('start_date')[:5]
+    recent_trips = user_trips[:4]
+
+    # Stats
+    total_trips = user_trips.count()
+    countries = set()
+    for trip in user_trips.prefetch_related('stops__city'):
+        for stop in trip.stops.all():
+            if stop.city:
+                countries.add(stop.city.country)
+
+    # Countdown to next trip
+    next_trip = upcoming_trips.first()
+    countdown = None
+    if next_trip:
+        delta = next_trip.start_date - timezone.now().date()
+        countdown = delta.days
+
+    # Recommended cities
+    recommended_cities = City.objects.order_by('-popularity_score')[:6]
+
+    context = {
+        'upcoming_trips': upcoming_trips,
+        'recent_trips': recent_trips,
+        'total_trips': total_trips,
+        'countries_count': len(countries),
+        'countdown': countdown,
+        'next_trip': next_trip,
+        'recommended_cities': recommended_cities,
+    }
+    return render(request, 'trips/dashboard.html', context)
+
+
+@login_required
+def trip_list_view(request):
+    trips = Trip.objects.filter(user=request.user).prefetch_related('stops__city')
+    query = request.GET.get('q', '')
+    if query:
+        trips = trips.filter(name__icontains=query)
+
+    context = {
+        'trips': trips,
+        'query': query,
+    }
+    return render(request, 'trips/trip_list.html', context)
+
+
+@login_required
+def trip_create_view(request):
+    if request.method == 'POST':
+        form = TripForm(request.POST, request.FILES)
+        if form.is_valid():
+            trip = form.save(commit=False)
+            trip.user = request.user
+            trip.save()
+            messages.success(request, f'Trip "{trip.name}" created successfully!')
+            return redirect('trip_detail', pk=trip.pk)
+    else:
+        form = TripForm()
+
+    return render(request, 'trips/create_trip.html', {'form': form})
+
+
+@login_required
+def trip_detail_view(request, pk):
+    trip = get_object_or_404(
+        Trip.objects.prefetch_related(
+            'stops__city', 'stops__trip_activities__activity',
+            'packing_items', 'notes__stop'
+        ),
+        pk=pk, user=request.user
+    )
+
+    stops = trip.stops.all()
+    total_estimated = trip.total_estimated_cost
+    over_budget = total_estimated > float(trip.total_budget) if trip.total_budget > 0 else False
+
+    # Packing stats
+    packing_items = trip.packing_items.all()
+    packed_count = packing_items.filter(is_packed=True).count()
+    total_packing = packing_items.count()
+
+    context = {
+        'trip': trip,
+        'stops': stops,
+        'total_estimated': total_estimated,
+        'over_budget': over_budget,
+        'packing_items': packing_items,
+        'packed_count': packed_count,
+        'total_packing': total_packing,
+        'notes': trip.notes.all(),
+        'share_url': request.build_absolute_uri(f'/share/{trip.share_token}/'),
+    }
+    return render(request, 'trips/trip_detail.html', context)
+
+
+@login_required
+def trip_edit_view(request, pk):
+    trip = get_object_or_404(Trip, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = TripForm(request.POST, request.FILES, instance=trip)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Trip updated successfully!')
+            return redirect('trip_detail', pk=trip.pk)
+    else:
+        form = TripForm(instance=trip)
+
+    return render(request, 'trips/create_trip.html', {'form': form, 'edit_mode': True, 'trip': trip})
+
+
+@login_required
+def trip_delete_view(request, pk):
+    trip = get_object_or_404(Trip, pk=pk, user=request.user)
+    if request.method == 'POST':
+        name = trip.name
+        trip.delete()
+        messages.success(request, f'Trip "{name}" deleted.')
+        return redirect('trip_list')
+    return render(request, 'trips/trip_confirm_delete.html', {'trip': trip})
+
+
+@login_required
+def itinerary_builder_view(request, pk):
+    trip = get_object_or_404(
+        Trip.objects.prefetch_related(
+            'stops__city', 'stops__trip_activities__activity'
+        ),
+        pk=pk, user=request.user
+    )
+    stop_form = TripStopForm()
+    cities = City.objects.all().order_by('name')
+
+    context = {
+        'trip': trip,
+        'stops': trip.stops.all(),
+        'stop_form': stop_form,
+        'cities': cities,
+    }
+    return render(request, 'trips/itinerary_builder.html', context)
+
+
+@login_required
+def itinerary_view_view(request, pk):
+    trip = get_object_or_404(
+        Trip.objects.prefetch_related(
+            'stops__city', 'stops__trip_activities__activity'
+        ),
+        pk=pk, user=request.user
+    )
+
+    context = {
+        'trip': trip,
+        'stops': trip.stops.all(),
+    }
+    return render(request, 'trips/itinerary_view.html', context)
+
+
+@login_required
+@require_POST
+def add_stop_view(request, pk):
+    trip = get_object_or_404(Trip, pk=pk, user=request.user)
+    form = TripStopForm(request.POST)
+    if form.is_valid():
+        stop = form.save(commit=False)
+        stop.trip = trip
+        stop.order = trip.stops.count()
+        stop.save()
+        return JsonResponse({
+            'status': 'ok',
+            'stop_id': stop.id,
+            'city_name': stop.city.name if stop.city else '',
+            'arrival_date': str(stop.arrival_date),
+            'departure_date': str(stop.departure_date),
+        })
+    return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+
+
+@login_required
+@require_POST
+def remove_stop_view(request, stop_id):
+    stop = get_object_or_404(TripStop, pk=stop_id, trip__user=request.user)
+    stop.delete()
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@require_POST
+def add_activity_view(request, stop_id):
+    stop = get_object_or_404(TripStop, pk=stop_id, trip__user=request.user)
+    activity_id = request.POST.get('activity_id')
+    if not activity_id:
+        return JsonResponse({'status': 'error', 'message': 'Activity ID required'}, status=400)
+
+    activity = get_object_or_404(Activity, pk=activity_id)
+    ta, created = TripActivity.objects.get_or_create(
+        stop=stop, activity=activity,
+        defaults={
+            'scheduled_date': stop.arrival_date,
+        }
+    )
+    return JsonResponse({
+        'status': 'ok',
+        'created': created,
+        'ta_id': ta.id,
+        'activity_name': activity.name,
+        'estimated_cost': float(activity.estimated_cost),
+    })
+
+
+@login_required
+@require_POST
+def remove_activity_view(request, ta_id):
+    ta = get_object_or_404(TripActivity, pk=ta_id, stop__trip__user=request.user)
+    ta.delete()
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+def budget_view(request, pk):
+    trip = get_object_or_404(
+        Trip.objects.prefetch_related(
+            'stops__city', 'stops__trip_activities__activity'
+        ),
+        pk=pk, user=request.user
+    )
+
+    stops_data = []
+    category_costs = {}
+    daily_costs = {}
+
+    for stop in trip.stops.all():
+        stop_activities = stop.trip_activities.select_related('activity').all()
+        activity_total = sum(float(ta.activity.estimated_cost) for ta in stop_activities)
+        stay_cost = float(stop.city.cost_index) * stop.duration_days if stop.city else 0
+
+        # Aggregate by category
+        for ta in stop_activities:
+            cat = ta.activity.get_category_display()
+            category_costs[cat] = category_costs.get(cat, 0) + float(ta.activity.estimated_cost)
+
+        category_costs['Accommodation'] = category_costs.get('Accommodation', 0) + stay_cost
+
+        stops_data.append({
+            'stop': stop,
+            'activity_cost': activity_total,
+            'stay_cost': stay_cost,
+            'total': activity_total + stay_cost,
+        })
+
+    total_estimated = sum(s['total'] for s in stops_data)
+    over_budget = total_estimated > float(trip.total_budget) if trip.total_budget > 0 else False
+    avg_per_day = total_estimated / trip.duration_days if trip.duration_days > 0 else 0
+
+    context = {
+        'trip': trip,
+        'stops_data': stops_data,
+        'total_estimated': total_estimated,
+        'over_budget': over_budget,
+        'avg_per_day': round(avg_per_day, 2),
+        'category_labels': json.dumps(list(category_costs.keys())),
+        'category_values': json.dumps(list(category_costs.values())),
+        'budget_total': float(trip.total_budget),
+    }
+    return render(request, 'trips/budget.html', context)
+
+
+@login_required
+def packing_checklist_view(request, pk):
+    trip = get_object_or_404(Trip, pk=pk, user=request.user)
+
+    if request.method == 'POST':
+        if 'reset' in request.POST:
+            trip.packing_items.update(is_packed=False)
+            messages.success(request, 'Checklist reset!')
+            return redirect('packing_checklist', pk=pk)
+
+        form = PackingItemForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.trip = trip
+            item.save()
+            messages.success(request, f'Added "{item.name}" to packing list.')
+            return redirect('packing_checklist', pk=pk)
+    else:
+        form = PackingItemForm()
+
+    items = trip.packing_items.all()
+    packed_count = items.filter(is_packed=True).count()
+    total_count = items.count()
+
+    # Group by category
+    categories = {}
+    for item in items:
+        cat = item.get_category_display()
+        categories.setdefault(cat, []).append(item)
+
+    context = {
+        'trip': trip,
+        'form': form,
+        'categories': categories,
+        'packed_count': packed_count,
+        'total_count': total_count,
+    }
+    return render(request, 'trips/packing_checklist.html', context)
+
+
+@login_required
+@require_POST
+def toggle_packed_view(request, item_id):
+    item = get_object_or_404(PackingItem, pk=item_id, trip__user=request.user)
+    item.is_packed = not item.is_packed
+    item.save()
+    return JsonResponse({'status': 'ok', 'is_packed': item.is_packed})
+
+
+@login_required
+def notes_view(request, pk):
+    trip = get_object_or_404(
+        Trip.objects.prefetch_related('notes__stop__city', 'stops__city'),
+        pk=pk, user=request.user
+    )
+
+    if request.method == 'POST':
+        form = TripNoteForm(request.POST, trip=trip)
+        if form.is_valid():
+            note = form.save(commit=False)
+            note.trip = trip
+            note.save()
+            messages.success(request, 'Note added!')
+            return redirect('trip_notes', pk=pk)
+    else:
+        form = TripNoteForm(trip=trip)
+
+    context = {
+        'trip': trip,
+        'form': form,
+        'notes': trip.notes.all(),
+    }
+    return render(request, 'trips/notes.html', context)
+
+
+@login_required
+@require_POST
+def note_delete_view(request, note_id):
+    note = get_object_or_404(TripNote, pk=note_id, trip__user=request.user)
+    note.delete()
+    return JsonResponse({'status': 'ok'})
+
+
+def public_itinerary_view(request, token):
+    trip = get_object_or_404(
+        Trip.objects.prefetch_related(
+            'stops__city', 'stops__trip_activities__activity'
+        ),
+        share_token=token, is_public=True
+    )
+
+    context = {
+        'trip': trip,
+        'stops': trip.stops.all(),
+        'share_url': request.build_absolute_uri(),
+    }
+    return render(request, 'trips/public_itinerary.html', context)
+
+
+@login_required
+@require_POST
+def copy_trip_view(request, token):
+    original = get_object_or_404(Trip, share_token=token, is_public=True)
+
+    new_trip = Trip.objects.create(
+        user=request.user,
+        name=f"Copy of {original.name}",
+        description=original.description,
+        start_date=original.start_date,
+        end_date=original.end_date,
+        total_budget=original.total_budget,
+        is_public=False,
+    )
+
+    for stop in original.stops.all():
+        new_stop = TripStop.objects.create(
+            trip=new_trip,
+            city=stop.city,
+            arrival_date=stop.arrival_date,
+            departure_date=stop.departure_date,
+            order=stop.order,
+            notes=stop.notes,
+        )
+        for ta in stop.trip_activities.all():
+            TripActivity.objects.create(
+                stop=new_stop,
+                activity=ta.activity,
+                scheduled_date=ta.scheduled_date,
+                scheduled_time=ta.scheduled_time,
+                notes=ta.notes,
+            )
+
+    for item in original.packing_items.all():
+        PackingItem.objects.create(
+            trip=new_trip,
+            name=item.name,
+            category=item.category,
+        )
+
+    messages.success(request, f'Trip copied! You can now customize "{new_trip.name}".')
+    return redirect('itinerary_builder', pk=new_trip.pk)
+
+
+@login_required
+@require_POST
+def reorder_stops_view(request, pk):
+    trip = get_object_or_404(Trip, pk=pk, user=request.user)
+    try:
+        data = json.loads(request.body)
+        for item in data.get('order', []):
+            TripStop.objects.filter(
+                pk=item['stop_id'], trip=trip
+            ).update(order=item['order'])
+        return JsonResponse({'status': 'ok'})
+    except (json.JSONDecodeError, KeyError):
+        return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
