@@ -4,59 +4,56 @@
 {% block title %}Sign Up — Traveloop{% endblock %}
 
 {% block content %}
-<div class="fixed inset-0 flex">
+<div class="row g-0 vh-100 position-fixed top-0 start-0 w-100 z-3 bg-body">
     
     <!-- Left Panel: Animated Map -->
-    <div class="hidden lg:flex lg:w-1/2 h-screen relative bg-[var(--ink)] overflow-hidden items-center justify-center">
+    <div class="col-lg-6 d-none d-lg-flex position-relative bg-dark overflow-hidden align-items-center justify-content-center">
         <!-- SVG Map Background -->
-        <svg class="absolute inset-0 w-full h-full text-[var(--ink)]-border opacity-30" viewBox="0 0 1000 600" fill="none" stroke="currentColor" stroke-width="1">
+        <svg class="position-absolute w-100 h-100 opacity-25" style="color: rgba(255,255,255,0.1);" viewBox="0 0 1000 600" fill="none" stroke="currentColor" stroke-width="1">
             <path d="M100,200 Q200,100 300,300 T500,200 T700,400 T900,100" />
             <path d="M50,400 Q150,500 250,300 T450,400 T650,200 T850,500" />
             <path d="M200,100 Q400,200 600,100 T900,300" />
         </svg>
 
         <!-- Animated Glowing Dots -->
-        <div class="absolute" style="top: 30%; left: 45%;">
-            <div class="w-3 h-3 bg-[var(--gold)] rounded-full dot-pulse relative"></div>
-            <span class="absolute top-4 left-4 text-[var(--text-muted)] font-mono text-xs uppercase tracking-widest float-label">Paris</span>
+        <div class="position-absolute float-label" style="top: 30%; left: 45%;">
+            <div class="bg-primary rounded-circle dot-pulse" style="width: 12px; height: 12px;"></div>
+            <span class="position-absolute top-0 start-100 ms-2 text-secondary font-mono small text-uppercase" style="letter-spacing: 2px;">Paris</span>
         </div>
-        <div class="absolute" style="top: 50%; left: 70%;">
-            <div class="w-3 h-3 bg-[var(--teal)] rounded-full dot-pulse relative"></div>
-            <span class="absolute top-4 left-4 text-[var(--text-muted)] font-mono text-xs uppercase tracking-widest float-label" style="animation-delay: 1s;">Tokyo</span>
+        <div class="position-absolute float-label" style="top: 50%; left: 70%; animation-delay: 1s;">
+            <div class="bg-info rounded-circle dot-pulse" style="width: 12px; height: 12px;"></div>
+            <span class="position-absolute top-0 start-100 ms-2 text-secondary font-mono small text-uppercase" style="letter-spacing: 2px;">Tokyo</span>
         </div>
-        <div class="absolute" style="top: 60%; left: 20%;">
-            <div class="w-3 h-3 bg-[#6366F1] rounded-full dot-pulse relative"></div>
-            <span class="absolute top-4 left-4 text-[var(--text-muted)] font-mono text-xs uppercase tracking-widest float-label" style="animation-delay: 2s;">New York</span>
+        <div class="position-absolute float-label" style="top: 60%; left: 20%; animation-delay: 2s;">
+            <div class="bg-danger rounded-circle dot-pulse" style="width: 12px; height: 12px;"></div>
+            <span class="position-absolute top-0 start-100 ms-2 text-secondary font-mono small text-uppercase" style="letter-spacing: 2px;">New York</span>
         </div>
 
-        <div class="absolute bottom-12 left-12 z-10 max-w-md">
-            <h2 class="font-display text-4xl font-light text-[var(--text-primary)] leading-tight">
-                <em class="text-gold not-italic">Start your</em> journey.
+        <div class="position-absolute bottom-0 start-0 p-5 z-1" style="max-width: 500px;">
+            <h2 class="font-display display-5 fw-light text-white lh-sm">
+                <em class="text-primary text-decoration-none" style="font-style: normal;">Start your</em> journey.
             </h2>
         </div>
         
-        <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[var(--ink)] to-transparent"></div>
+        <div class="position-absolute top-0 bottom-0 end-0" style="width: 100px; background: linear-gradient(to left, var(--bs-body-bg), transparent);"></div>
     </div>
 
     <!-- Right Panel: Signup Form -->
-    <div class="w-full lg:w-1/2 h-screen overflow-y-auto flex flex-col p-8 relative z-10">
+    <div class="col-12 col-lg-6 d-flex flex-column justify-content-center align-items-center p-4 p-md-5 position-relative">
         
-        <div class="flex-1 min-h-[2rem]"></div>
         <!-- Glass Card -->
-        <div class="glass rounded-[var(--radius-xl)] p-10 w-full max-w-md relative mx-auto flex-shrink-0">
+        <div class="card border-0 shadow-lg p-4 p-md-5 w-100" style="max-width: 450px; background: var(--bs-tertiary-bg);">
             
-            <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--teal)] opacity-[0.03] rounded-full blur-[60px] pointer-events-none"></div>
-
-            <div class="text-center mb-8">
-                <div class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center mb-6"
-                     style="background: linear-gradient(135deg, #0ECFB1, #6366F1);">
-                    <span class="text-[var(--ink)] font-bold text-2xl">T</span>
+            <div class="text-center mb-4">
+                <div class="rounded-4 mx-auto d-flex align-items-center justify-content-center mb-4 text-dark"
+                     style="width: 56px; height: 56px; background: linear-gradient(135deg, var(--teal), #6366F1);">
+                    <span class="fw-bold fs-3">T</span>
                 </div>
-                <h1 class="font-display text-3xl font-light mb-2">Create Account</h1>
-                <p class="font-body text-xs uppercase tracking-wider text-[var(--text-muted)]">Join Traveloop today</p>
+                <h1 class="font-display fs-2 mb-1">Create Account</h1>
+                <p class="font-body small text-uppercase text-secondary" style="letter-spacing: 1px;">Join Traveloop today</p>
             </div>
 
-            <form method="post" class="space-y-5" x-data="{
+            <form method="post" class="d-flex flex-column gap-3" x-data="{
                 pwd1: '', pwd2: '',
                 get match() { return this.pwd1 && this.pwd1 === this.pwd2; },
                 get strength() {
@@ -70,55 +67,50 @@
             }">
                 {% csrf_token %}
                 
-                <div class="form-group">
+                <div class="form-floating">
                     {{ form.username }}
-                    <label class="form-label-floating">Username</label>
-                    {% if form.username.errors %}<p class="text-xs text-red-500 mt-1">{{ form.username.errors.0 }}</p>{% endif %}
+                    <label>Username</label>
+                    {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
                 </div>
 
-                <div class="form-group">
+                <div class="form-floating">
                     {{ form.email }}
-                    <label class="form-label-floating">Email</label>
-                    {% if form.email.errors %}<p class="text-xs text-red-500 mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+                    <label>Email</label>
+                    {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
                 </div>
 
-                <div class="form-group">
+                <div class="form-floating">
                     {{ form.password1 }}
-                    <label class="form-label-floating">Password</label>
-                    {% if form.password1.errors %}<p class="text-xs text-red-500 mt-1">{{ form.password1.errors.0 }}</p>{% endif %}
+                    <label>Password</label>
+                    {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
                     
                     <!-- Strength meter -->
-                    <div class="mt-2 h-1 w-full bg-[var(--ink-border)] rounded-full overflow-hidden" x-show="pwd1.length > 0">
-                        <div class="h-full transition-all duration-300"
-                             :class="{
-                                 'bg-[var(--danger)]': strength <= 25,
-                                 'bg-[var(--warning)]': strength === 50,
-                                 'bg-[var(--success)]': strength >= 75
-                             }"
-                             :style="`width: ${strength}%`"></div>
+                    <div class="progress mt-2" style="height: 4px;" x-show="pwd1.length > 0">
+                        <div class="progress-bar transition-all"
+                             :class="{ 'bg-danger': strength <= 25, 'bg-warning': strength === 50, 'bg-success': strength >= 75 }"
+                             :style="`width: ${strength}%`" role="progressbar"></div>
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-floating mt-2">
                     {{ form.password2 }}
-                    <label class="form-label-floating">Confirm Password</label>
-                    <p class="text-xs mt-1" x-show="pwd2.length > 0" :class="match ? 'text-[var(--success)]' : 'text-red-500'" x-text="match ? 'Passwords match' : 'Passwords do not match'"></p>
-                    {% if form.password2.errors %}<p class="text-xs text-red-500 mt-1">{{ form.password2.errors.0 }}</p>{% endif %}
+                    <label>Confirm Password</label>
+                    <div class="small mt-1" x-show="pwd2.length > 0" :class="match ? 'text-success' : 'text-danger'" x-text="match ? 'Passwords match' : 'Passwords do not match'"></div>
+                    {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
                 </div>
 
-                <button type="submit" class="btn-primary w-full mt-6">
+                <button type="submit" class="btn btn-primary w-100 py-2 mt-3 fs-5" :disabled="!match && pwd2.length > 0">
                     Create Account
                 </button>
             </form>
 
-            <div class="mt-8 text-center">
-                <p class="text-sm text-[var(--text-muted)]">
+            <div class="mt-4 text-center">
+                <p class="fs-6 text-secondary">
                     Already have an account? 
-                    <a href="{% url 'login' %}" class="text-teal hover:text-[#6366F1] font-medium transition-colors ml-1">Log In &rarr;</a>
+                    <a href="{% url 'login' %}" class="text-info text-decoration-none fw-medium ms-1">Log In &rarr;</a>
                 </p>
             </div>
         </div>
-        <div class="flex-1 min-h-[2rem]"></div>
 
     </div>
 
@@ -128,7 +120,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
         inputs.forEach(input => {
-            input.classList.add('input-field');
+            input.classList.add('form-control');
             input.setAttribute('placeholder', ' ');
             
             // Add x-model bindings to password fields

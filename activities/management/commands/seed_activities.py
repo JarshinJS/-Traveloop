@@ -137,11 +137,17 @@ class Command(BaseCommand):
                 continue
 
             for act_data in activities:
-                is_popular = act_data.pop('is_popular', False)
-                _, created = Activity.objects.get_or_create(
+                defaults = act_data.copy()
+                is_popular = defaults.pop('is_popular', False)
+                defaults.update({
+                    'is_popular': is_popular,
+                    'cost': defaults['estimated_cost'],
+                    'duration_minutes': int(float(defaults['duration_hours']) * 60),
+                })
+                _, created = Activity.objects.update_or_create(
                     city=city,
                     name=act_data['name'],
-                    defaults={**act_data, 'is_popular': is_popular},
+                    defaults=defaults,
                 )
                 if created:
                     created_count += 1

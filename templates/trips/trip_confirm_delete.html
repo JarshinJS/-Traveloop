@@ -3,34 +3,56 @@
 
 {% block title %}Delete {{ trip.name }}? — Traveloop{% endblock %}
 
+{% block breadcrumb %}
+  <a href="{% url 'dashboard' %}" style="color:var(--text-muted);">Home</a>
+  <span>/</span>
+  <span>Delete {{ trip.name }}?</span>
+{% endblock %}
+
 {% block content %}
+<div style="padding: 0;">
+
+  <!-- Page Header -->
+  <div class="tl-page-header">
+    <div>
+      <h1 class="tl-page-title">Delete {{ trip.name }}?</h1>
+      <p class="tl-page-subtitle">Manage your delete {{ trip.name }}?</p>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <!-- Action buttons here -->
+    </div>
+  </div>
+
+  <!-- Page Body -->
+
 <div class="max-w-lg mx-auto mt-20 fade-in">
-    <div class="glass p-10 rounded-[var(--radius-xl)] border border-[rgba(239,68,68,0.3)] shadow-[0_0_40px_rgba(239,68,68,0.1)] text-center relative overflow-hidden">
+    <div class="glass p-5 rounded-[var(--radius-xl)] border border-[rgba(239,68,68,0.3)] shadow-[0_0_40px_rgba(239,68,68,0.1)] text-center position-relative overflow-d-none">
         
         <!-- Warning Background Effect -->
-        <div class="absolute inset-0 bg-gradient-to-t from-[rgba(239,68,68,0.05)] to-transparent pointer-events-none"></div>
+        <div class="position-absolute top-0 bottom-0 start-0 end-0 bg-gradient-to-t from-[rgba(239,68,68,0.05)] to-transparent pointer-events-none"></div>
         
-        <div class="relative z-10">
-            <span class="text-6xl mb-6 block animate-pulse">⚠️</span>
-            <h2 class="font-display text-4xl font-light text-[var(--text-primary)] mb-4">Delete Journey</h2>
+        <div class="position-relative z-1">
+            <span class="display-6 mb-4 block animate-pulse">⚠️</span>
+            <h2 class="font-display fs-2 fw-light text-[var(--text-primary)] mb-3">Delete Journey</h2>
             
-            <p class="font-body text-sm text-[var(--text-muted)] mb-8 leading-relaxed">
-                Are you absolutely sure you want to abandon <strong class="text-red-500">"{{ trip.name }}"</strong>?<br>
+            <p class="font-body fs-6 text-[var(--text-muted)] mb-4 leading-relaxed">
+                Are you absolutely sure you want to abandon <strong class="text-danger">"{{ trip.name }}"</strong>?<br>
                 This action is permanent and will erase all associated destinations, activities, packing lists, and journal entries.
             </p>
             
             <form method="post">
                 {% csrf_token %}
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="{% url 'trip_detail' pk=trip.pk %}" class="btn-ghost w-full sm:w-auto">
+                <div class="d-flex d-flex-column sm:d-flex-row align-items-center justify-content-center gap-3">
+                    <a href="{% url 'trip_detail' pk=trip.pk %}" class="btn btn-light w-100 sm:w-auto">
                         Cancel
                     </a>
-                    <button type="submit" class="btn-primary !bg-[var(--danger)] !border-[var(--danger)] hover:!bg-[rgba(239,68,68,0.8)] shadow-[0_0_20px_rgba(239,68,68,0.2)] w-full sm:w-auto">
+                    <button type="submit" class="btn btn-primary !bg-[var(--danger)] !border-[var(--danger)] hover:!bg-[rgba(239,68,68,0.8)] shadow-[0_0_20px_rgba(239,68,68,0.2)] w-100 sm:w-auto">
                         Erase Forever
                     </button>
                 </div>
             </form>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

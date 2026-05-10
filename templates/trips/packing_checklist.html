@@ -3,105 +3,116 @@
 
 {% block title %}Packing Checklist: {{ trip.name }} — Traveloop{% endblock %}
 
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-body-secondary">Home</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'trip_detail' trip.pk %}" class="text-decoration-none text-body-secondary">{{ trip.name }}</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Packing Checklist</li>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-8">
+<div class="d-flex flex-column gap-4 pb-5">
     
     <!-- HEADER -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--ink-border)] pb-6">
+    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-4 border-bottom pb-4">
         <div>
-            <p class="font-body text-[10px] uppercase tracking-widest text-gold mb-1 flex items-center gap-2">
-                <a href="{% url 'trip_detail' trip.pk %}" class="hover:text-[var(--gold-light)]">&larr; Back to Overview</a>
-            </p>
-            <h1 class="font-display text-4xl md:text-5xl font-light text-[var(--text-primary)] mb-2">Packing Checklist</h1>
-            <p class="font-mono text-xs text-[var(--text-muted)]">{{ trip.name }}</p>
+            <a href="{% url 'trip_detail' trip.pk %}" class="text-decoration-none small text-uppercase text-primary fw-bold d-flex align-items-center gap-1 mb-2" style="letter-spacing: 0.1em;">
+                <i class="bi bi-arrow-left"></i> Back to Overview
+            </a>
+            <h1 class="font-display display-5 fw-medium mb-1">Packing Checklist</h1>
+            <p class="font-mono small text-secondary mb-0">{{ trip.name }}</p>
         </div>
         
-        <div class="flex flex-col items-end gap-2">
-            <span class="font-mono text-2xl font-light text-gold">{{ packed_count }} <span class="text-sm text-[var(--text-muted)]">/ {{ total_count }}</span></span>
-            <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Items Packed</p>
+        <div class="d-flex flex-column align-items-md-end gap-1">
+            <span class="font-mono display-6 text-warning fw-medium">{{ packed_count }} <span class="fs-4 text-secondary fw-light">/ {{ total_count }}</span></span>
+            <p class="font-body small text-uppercase text-secondary fw-bold mb-0" style="letter-spacing: 0.1em;">Items Packed</p>
         </div>
     </div>
 
     <!-- PROGRESS RING / BAR -->
     {% if total_count > 0 %}
-    <div class="card p-6 flex flex-col gap-4">
-        <div class="h-3 bg-[var(--ink)]-soft rounded-full overflow-hidden relative">
-            {% widthratio packed_count total_count 100 as pct %}
-            <div class="absolute inset-y-0 left-0 transition-all duration-1000 rounded-full" 
-                 style="width: {% if pct %}{{ pct }}{% else %}0{% endif %}%; background: linear-gradient(90deg, var(--teal), var(--gold)); box-shadow: 0 0 10px rgba(232,168,56,0.5);"></div>
+    <div class="card border-0 shadow-sm bg-body-tertiary p-4 p-md-5 my-2">
+        {% widthratio packed_count total_count 100 as pct %}
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <span class="font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.1em;">Progress</span>
+            <span class="font-mono fs-5 text-warning fw-bold">{% if pct %}{{ pct }}{% else %}0{% endif %}% Complete</span>
         </div>
-        <div class="flex justify-between items-center text-[10px] font-body uppercase tracking-widest">
-            <span class="text-[var(--text-muted)]">Start</span>
-            <span class="text-gold">{% if pct %}{{ pct }}{% else %}0{% endif %}% Complete</span>
-            <span class="text-[var(--text-muted)]">Ready</span>
+        <div class="progress rounded-pill" style="height: 16px; background: var(--bs-border-color);">
+            <div class="progress-bar bg-warning text-dark fw-bold transition-all duration-1000" 
+                 role="progressbar" 
+                 style="width: {% if pct %}{{ pct }}{% else %}0{% endif %}%;"
+                 aria-valuenow="{% if pct %}{{ pct }}{% else %}0{% endif %}" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
     </div>
     {% endif %}
 
     <!-- ADD ITEM FORM -->
-    <div class="glass p-6 rounded-[var(--radius-lg)] border border-[var(--ink-border)]">
-        <form method="post" class="flex flex-col md:flex-row gap-4 items-end">
+    <div class="card border-0 shadow-sm bg-body-tertiary p-4">
+        <form method="post" class="row align-items-end g-3">
             {% csrf_token %}
-            <div class="form-group flex-1 w-full mb-0">
-                <label class="form-label text-[10px]">Item Name</label>
+            <div class="col-md-5">
+                <label class="form-label small text-secondary text-uppercase fw-bold" style="letter-spacing: 0.05em;">Item Name</label>
                 {{ form.name }}
             </div>
-            <div class="form-group w-full md:w-48 mb-0">
-                <label class="form-label text-[10px]">Category</label>
+            <div class="col-md-4">
+                <label class="form-label small text-secondary text-uppercase fw-bold" style="letter-spacing: 0.05em;">Category</label>
                 {{ form.category }}
             </div>
-            <button type="submit" class="btn-primary flex-shrink-0 !h-[50px] !px-8">
-                Add Item
-            </button>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100 py-2">
+                    <i class="bi bi-plus-lg me-1"></i> Add Item
+                </button>
+            </div>
         </form>
     </div>
 
     <!-- GROUPS -->
-    <div class="space-y-6">
+    <div class="row row-cols-1 row-cols-lg-2 g-4 mt-2">
         {% for category_name, items in categories.items %}
-        <div class="card p-0 overflow-hidden border border-[var(--ink-border)]">
-            <div class="p-4 bg-black/5 dark:bg-white/5 border-b border-[var(--ink-border)]">
-                <h3 class="font-body text-xs uppercase tracking-widest text-gold flex items-center gap-2">
-                    <!-- Icon placeholder based on category (optional polish) -->
-                    <span class="w-1.5 h-1.5 rounded-full bg-[var(--gold)]"></span>
-                    {{ category_name }}
-                </h3>
-            </div>
-            
-            <div class="divide-y divide-[var(--ink-border)]">
-                {% for item in items %}
-                <label class="flex items-center justify-between p-4 hover:bg-[rgba(255,255,255,0.01)] transition-colors cursor-pointer group">
-                    <div class="flex items-center gap-4">
-                        <input type="checkbox" class="checkbox-custom" 
-                               {% if item.is_packed %}checked{% endif %}
-                               data-id="{{ item.pk }}">
-                        <span class="font-medium text-sm transition-colors text-[var(--text-primary)] toggle-packed-text" 
-                              id="packing-text-{{ item.pk }}"
-                              style="{% if item.is_packed %}text-decoration: line-through; opacity: 0.5;{% endif %}">
-                            {{ item.name }}
-                        </span>
-                    </div>
-                </label>
-                {% endfor %}
+        <div class="col">
+            <div class="card border-0 shadow-sm h-100 overflow-hidden">
+                <div class="card-header bg-body-tertiary border-bottom p-3">
+                    <h3 class="font-body small text-uppercase text-warning fw-bold mb-0 d-flex align-items-center gap-2" style="letter-spacing: 0.1em;">
+                        <span class="rounded-circle bg-warning" style="width: 8px; height: 8px;"></span>
+                        {{ category_name }}
+                    </h3>
+                </div>
+                
+                <div class="list-group list-group-flush">
+                    {% for item in items %}
+                    <label class="list-group-item d-flex align-items-center justify-content-between p-3 cursor-pointer hover-bg-subtle border-secondary-subtle">
+                        <div class="d-flex align-items-center gap-3">
+                            <input class="form-check-input fs-5 mt-0 toggle-packed" type="checkbox" value="" aria-label="..." 
+                                   {% if item.is_packed %}checked{% endif %}
+                                   data-id="{{ item.pk }}">
+                            <span class="fw-medium text-body transition-all toggle-packed-text" 
+                                  id="packing-text-{{ item.pk }}"
+                                  style="{% if item.is_packed %}text-decoration: line-through; opacity: 0.5;{% endif %}">
+                                {{ item.name }}
+                            </span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
             </div>
         </div>
         {% empty %}
-        <div class="empty-state py-16">
-            <span class="text-5xl opacity-20 mb-4">🧳</span>
-            <h3 class="font-display text-2xl font-light text-[var(--text-primary)] mb-2">No items packed yet.</h3>
-            <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Add your first essential above.</p>
+        <div class="col-12">
+            <div class="text-center py-5 bg-body-tertiary rounded-4 border-0 shadow-sm">
+                <i class="bi bi-suitcase-lg display-1 text-secondary opacity-25 mb-4 d-block"></i>
+                <h3 class="font-display fs-3 fw-light mb-2">No items packed yet.</h3>
+                <p class="font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.1em;">Add your first essential above.</p>
+            </div>
         </div>
         {% endfor %}
     </div>
 
     {% if total_count > 0 %}
-    <div class="flex justify-center pt-8 border-t border-[var(--ink-border)]">
-        <form method="post">
+    <div class="d-flex justify-content-center pt-4 mt-4 border-top">
+        <form method="post" action="{% url 'reset_packing' trip.pk %}">
             {% csrf_token %}
-            <input type="hidden" name="reset" value="1">
-            <button type="submit" class="btn-ghost !border-[rgba(239,68,68,0.3)] !text-red-500 hover:!bg-[rgba(239,68,68,0.1)] hover:!border-[var(--danger)]"
+            <button type="submit" class="btn btn-outline-danger rounded-pill px-4"
                     onclick="return confirm('Are you sure you want to uncheck all items?')">
-                Reset Checklist
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Checklist
             </button>
         </form>
     </div>
@@ -113,18 +124,15 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Style Django form fields
-    const inputs = document.querySelectorAll('#add-packing-form input, form input[type="text"], form select');
+    const inputs = document.querySelectorAll('form input[type="text"], form select');
     inputs.forEach(input => {
-        if(!input.classList.contains('input-field')) {
-            input.classList.add('input-field');
-            input.style.height = '50px';
+        if(!input.classList.contains('form-control') && !input.classList.contains('form-select')) {
+            if(input.tagName === 'SELECT') {
+                input.classList.add('form-select', 'bg-body-tertiary');
+            } else {
+                input.classList.add('form-control', 'bg-body-tertiary');
+            }
         }
-    });
-
-    // Handling checkbox toggle locally and pushing to backend via AJAX (logic already in app.js, 
-    // but app.js expects class 'toggle-packed' on checkboxes, let's add the class)
-    document.querySelectorAll('.checkbox-custom').forEach(cb => {
-        cb.classList.add('toggle-packed');
     });
 });
 </script>

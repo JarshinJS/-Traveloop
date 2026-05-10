@@ -3,151 +3,162 @@
 
 {% block title %}Dashboard — Traveloop{% endblock %}
 
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-body-secondary">Home</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-12 pb-12">
+<div class="d-flex flex-column gap-5 pb-5">
 
     <!-- ░░░ HERO BANNER ░░░ -->
-    <section class="relative overflow-hidden rounded-[var(--radius-xl)] shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-[var(--ink-border)]" style="height: 280px; background: var(--grad-hero);">
+    <section class="position-relative overflow-hidden rounded-4 shadow-sm border border-secondary-subtle" style="height: 280px; background: linear-gradient(135deg, var(--bs-tertiary-bg), var(--bs-body-bg));">
       <!-- Star canvas -->
-      <canvas id="starfield" class="absolute inset-0 w-full h-full opacity-40"></canvas>
+      <canvas id="starfield" class="position-absolute top-0 start-0 w-100 h-100 opacity-25"></canvas>
     
       <!-- Gold line accent -->
-      <div class="absolute top-0 left-0 right-0 h-px"
-           style="background: linear-gradient(90deg, transparent, var(--gold), transparent);"></div>
+      <div class="position-absolute top-0 start-0 w-100"
+           style="height: 2px; background: linear-gradient(90deg, transparent, var(--bs-primary), transparent);"></div>
     
       <!-- Content -->
-      <div class="relative z-10 h-full flex flex-col justify-center px-10">
-        <p class="font-body text-xs uppercase tracking-[0.2em] text-[var(--text-muted)] mb-3">
+      <div class="position-relative z-1 h-100 d-flex flex-column justify-content-center px-4 px-md-5">
+        <p class="font-body small text-uppercase text-secondary mb-2" style="letter-spacing: 0.2em;">
           Ready for adventure
         </p>
-        <h1 class="font-display font-light leading-none mb-6" style="font-size: clamp(2.5rem, 5vw, 4.5rem);">
+        <h1 class="font-display display-4 fw-medium mb-3">
           Where to next,
-          <em class="text-gold not-italic">{{ user.get_full_name|default:user.username }}</em>?
+          <em class="text-primary text-decoration-none" style="font-style: normal;">{{ user.get_full_name|default:user.username }}</em>?
         </h1>
-        <a href="{% url 'trip_create' %}" class="btn-primary w-fit">
-          Plan New Trip &rarr;
-        </a>
+        <div>
+          <a href="{% url 'trip_create' %}" class="btn btn-primary px-4">
+            Plan New Trip <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
       </div>
     </section>
 
     <!-- ░░░ STATS ROW ░░░ -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <section class="row row-cols-2 row-cols-lg-4 g-3">
         <!-- Stat 1 -->
-        <div class="card p-6 flex flex-col gap-2">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-gold/10">
-                <span class="text-xl">✈️</span>
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm p-4 d-flex flex-column gap-2" style="background: var(--bs-tertiary-bg);">
+                <div class="rounded-4 d-flex align-items-center justify-content-center bg-primary text-dark" style="width: 48px; height: 48px;">
+                    <i class="bi bi-airplane fs-4"></i>
+                </div>
+                <p class="font-mono fs-2 fw-light mb-0 mt-2" data-counter="{{ total_trips }}">0</p>
+                <p class="font-body small text-uppercase text-secondary mb-0" style="letter-spacing: 0.05em;">Trips Created</p>
             </div>
-            <p class="font-mono text-3xl font-light text-[var(--text-primary)] mt-2" data-counter="{{ total_trips }}">0</p>
-            <p class="font-body text-xs uppercase tracking-wider text-[var(--text-muted)]">Trips Created</p>
         </div>
 
         <!-- Stat 2 -->
-        <div class="card p-6 flex flex-col gap-2">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-teal/10">
-                <span class="text-xl">🌍</span>
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm p-4 d-flex flex-column gap-2" style="background: var(--bs-tertiary-bg);">
+                <div class="rounded-4 d-flex align-items-center justify-content-center bg-info text-dark" style="width: 48px; height: 48px;">
+                    <i class="bi bi-globe-americas fs-4"></i>
+                </div>
+                <p class="font-mono fs-2 fw-light mb-0 mt-2" data-counter="{{ countries_count }}">0</p>
+                <p class="font-body small text-uppercase text-secondary mb-0" style="letter-spacing: 0.05em;">Countries Visited</p>
             </div>
-            <p class="font-mono text-3xl font-light text-[var(--text-primary)] mt-2" data-counter="{{ countries_count }}">0</p>
-            <p class="font-body text-xs uppercase tracking-wider text-[var(--text-muted)]">Countries Visited</p>
         </div>
 
-        <!-- Stat 3 (Days travelled - approximated or placeholder if not in context) -->
-        <div class="card p-6 flex flex-col gap-2">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-[rgba(99,102,241,0.1)]">
-                <span class="text-xl">📅</span>
+        <!-- Stat 3 -->
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm p-4 d-flex flex-column gap-2" style="background: var(--bs-tertiary-bg);">
+                <div class="rounded-4 d-flex align-items-center justify-content-center text-white" style="width: 48px; height: 48px; background: #6366F1;">
+                    <i class="bi bi-calendar-day fs-4"></i>
+                </div>
+                <p class="font-mono fs-2 fw-light mb-0 mt-2" data-counter="{% if recent_trips %}{{ recent_trips.first.duration_days|default:0 }}{% else %}0{% endif %}">0</p>
+                <p class="font-body small text-uppercase text-secondary mb-0" style="letter-spacing: 0.05em;">Days Travelled</p>
             </div>
-            <p class="font-mono text-3xl font-light text-[var(--text-primary)] mt-2" data-counter="{% if recent_trips %}{{ recent_trips.first.duration_days|default:0 }}{% else %}0{% endif %}">0</p>
-            <p class="font-body text-xs uppercase tracking-wider text-[var(--text-muted)]">Days Travelled</p>
         </div>
 
-        <!-- Stat 4 (Countdown) -->
-        <div class="card p-6 flex flex-col gap-2 border-[rgba(232,168,56,0.3)] bg-[rgba(232,168,56,0.02)]">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-[rgba(232,168,56,0.15)]">
-                <span class="text-xl">⏳</span>
+        <!-- Stat 4 -->
+        <div class="col">
+            <div class="card h-100 shadow-sm p-4 d-flex flex-column gap-2 border-primary" style="background: rgba(var(--bs-primary-rgb), 0.05);">
+                <div class="rounded-4 d-flex align-items-center justify-content-center text-primary" style="width: 48px; height: 48px; background: rgba(var(--bs-primary-rgb), 0.15);">
+                    <i class="bi bi-hourglass-split fs-4"></i>
+                </div>
+                <p class="font-mono fs-2 fw-light mb-0 mt-2 text-primary">
+                    {% if countdown is not None %}{{ countdown }}{% else %}—{% endif %}
+                </p>
+                <p class="font-body small text-uppercase text-primary mb-0" style="letter-spacing: 0.05em;">
+                    {% if next_trip %}Days to {{ next_trip.name }}{% else %}No upcoming trips{% endif %}
+                </p>
             </div>
-            <p class="font-mono text-3xl font-light text-[var(--text-primary)] mt-2 text-gold">
-                {% if countdown is not None %}{{ countdown }}{% else %}—{% endif %}
-            </p>
-            <p class="font-body text-xs uppercase tracking-wider text-gold">
-                {% if next_trip %}Days to {{ next_trip.name }}{% else %}No upcoming trips{% endif %}
-            </p>
         </div>
     </section>
 
     <!-- ░░░ RECENT/UPCOMING TRIPS ░░░ -->
     <section>
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="font-display text-3xl font-light text-[var(--text-primary)]">Your Journeys</h2>
-            <a href="{% url 'trip_list' %}" class="text-gold hover:text-[var(--gold-light)] font-body text-xs uppercase tracking-wider transition-colors">View All &rarr;</a>
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h2 class="font-display fs-3 fw-light mb-0">Your Journeys</h2>
+            <a href="{% url 'trip_list' %}" class="text-primary text-decoration-none font-body small text-uppercase fw-bold" style="letter-spacing: 0.1em;">View All <i class="bi bi-arrow-right"></i></a>
         </div>
 
-        <div class="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
+        <!-- Horizontal Scroll Container -->
+        <div class="d-flex gap-4 overflow-x-auto pb-4" style="scroll-snap-type: x mandatory; scrollbar-width: none;">
             {% for trip in recent_trips %}
-            <div class="card flex-shrink-0 w-80 snap-start group cursor-pointer" onclick="location.href='{% url 'trip_detail' trip.pk %}'">
-                <!-- Cover image with overlay -->
-                <div class="relative h-48 overflow-hidden">
+            <div class="card border-0 shadow-sm overflow-hidden flex-shrink-0 position-relative" style="width: 320px; scroll-snap-align: start; cursor: pointer;" onclick="location.href='{% url 'trip_detail' trip.pk %}'">
+                
+                <!-- Cover Image -->
+                <div class="position-relative" style="height: 180px;">
                     {% if trip.cover_photo %}
-                        <img src="{{ trip.cover_photo.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <img src="{{ trip.cover_photo.url }}" class="w-100 h-100 object-fit-cover">
                     {% else %}
-                        <!-- Generated gradient placeholder based on trip name hash -->
-                        <div class="w-full h-full" style="background: linear-gradient(135deg, #0D1F3C, #0A2A2A);"></div>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="font-display text-5xl opacity-20 text-white">✈</span>
+                        <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, var(--bs-tertiary-bg), var(--bs-body-bg));">
+                            <i class="bi bi-airplane-engines fs-1 text-secondary opacity-25"></i>
                         </div>
                     {% endif %}
-
+                    
                     <!-- Overlay gradient -->
-                    <div class="absolute inset-0" style="background: linear-gradient(to top, rgba(10,14,26,0.95) 0%, transparent 70%);"></div>
+                    <div class="position-absolute top-0 bottom-0 start-0 w-100" style="background: linear-gradient(to top, var(--bs-body-bg) 0%, transparent 100%);"></div>
 
-                    <!-- Date badge top-right -->
-                    <div class="absolute top-4 right-4">
-                        <span class="badge badge-gold">{{ trip.start_date|date:"M Y" }}</span>
+                    <!-- Badge -->
+                    <div class="position-absolute top-0 end-0 mt-3 me-3">
+                        <span class="badge bg-primary text-dark rounded-pill px-3 py-2 shadow-sm">{{ trip.start_date|date:"M Y" }}</span>
                     </div>
                 </div>
 
-                <!-- Card body -->
-                <div class="p-6 relative -mt-6">
-                    <h3 class="font-display text-2xl font-medium text-[var(--text-primary)] mb-1 truncate">{{ trip.name }}</h3>
-                    <p class="font-body text-xs text-[var(--text-muted)] uppercase tracking-wider mb-5">
-                        {{ trip.stops.count }} cities · {{ trip.duration_days }} days
+                <!-- Body -->
+                <div class="p-4 pt-0 position-relative">
+                    <h3 class="font-display fs-4 fw-medium text-truncate mb-1">{{ trip.name }}</h3>
+                    <p class="font-body small text-secondary text-uppercase mb-4" style="letter-spacing: 0.05em;">
+                        {{ trip.stops.count }} cities • {{ trip.duration_days }} days
                     </p>
                     
-                    <div class="flex items-center justify-between">
-                        <!-- Budget progress bar -->
-                        <div class="flex-1 mr-4">
-                            <div class="h-1 bg-[var(--ink)]-border rounded-full overflow-hidden">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="flex-grow-1 me-3">
+                            <div class="progress" style="height: 6px;">
                                 {% widthratio trip.total_estimated_cost trip.total_budget 100 as progress %}
-                                <div class="h-full rounded-full transition-all duration-1000"
-                                     style="width: 0%; background: linear-gradient(90deg, var(--teal), var(--gold));"
-                                     data-progress="{% if progress > 100 %}100{% else %}{{ progress|default:0 }}{% endif %}"></div>
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {% if progress > 100 %}100{% else %}{{ progress|default:0 }}{% endif %}%;"></div>
                             </div>
-                            <p class="font-mono text-[10px] text-[var(--text-muted)] mt-2">
+                            <p class="font-mono text-secondary mb-0 mt-2" style="font-size: 0.7rem;">
                                 ${{ trip.total_estimated_cost|floatformat:0 }} est.
                             </p>
                         </div>
-                        <a href="{% url 'itinerary_builder' trip.pk %}" class="btn-ghost !px-4 !py-2 !text-[10px] hover:!text-[var(--ink)]">
-                            Build &rarr;
+                        <a href="{% url 'itinerary_builder' trip.pk %}" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="event.stopPropagation();">
+                            Build
                         </a>
                     </div>
                 </div>
             </div>
             {% empty %}
-            <!-- Empty State if no trips -->
-            <div class="w-full empty-state py-12">
-                <div class="empty-icon text-5xl mb-4">🌍</div>
-                <h3 class="font-display text-2xl text-[var(--text-primary)] mb-2">No journeys planned yet.</h3>
-                <p class="text-[var(--text-muted)] mb-6 text-sm">Every great adventure begins with a single step.</p>
-                <a href="{% url 'trip_create' %}" class="btn-primary">Start Planning</a>
+            <!-- Empty State -->
+            <div class="w-100 p-5 text-center bg-tertiary-bg rounded-4 border border-dashed">
+                <i class="bi bi-globe-americas display-4 text-secondary mb-3 d-block"></i>
+                <h3 class="font-display fs-4 mb-2">No journeys planned yet.</h3>
+                <p class="text-secondary mb-4">Every great adventure begins with a single step.</p>
+                <a href="{% url 'trip_create' %}" class="btn btn-primary px-4 py-2">Start Planning</a>
             </div>
             {% endfor %}
 
             {% if recent_trips %}
-            <!-- + New Trip card -->
-            <a href="{% url 'trip_create' %}"
-               class="flex-shrink-0 w-72 snap-start card !bg-transparent border-dashed border-[var(--ink-border)] flex items-center justify-center flex-col gap-4 hover:border-gold group transition-colors">
-                <div class="w-14 h-14 rounded-full border border-[var(--ink-border)] group-hover:border-gold bg-black/5 dark:bg-white/5 flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-gold/10">
-                    <span class="text-3xl text-[var(--text-ghost)] group-hover:text-gold transition-colors leading-none mb-1">+</span>
+            <!-- Add New Trip Card -->
+            <a href="{% url 'trip_create' %}" class="card flex-shrink-0 d-flex flex-column align-items-center justify-content-center text-decoration-none border-secondary-subtle" style="width: 280px; scroll-snap-align: start; background: transparent; border-style: dashed !important; border-width: 2px !important;">
+                <div class="rounded-circle border border-secondary-subtle d-flex align-items-center justify-content-center mb-3 text-secondary transition-all" style="width: 56px; height: 56px;">
+                    <i class="bi bi-plus-lg fs-3"></i>
                 </div>
-                <span class="font-body text-xs uppercase tracking-wider text-[var(--text-ghost)] group-hover:text-gold transition-colors">
+                <span class="font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.1em;">
                     Plan New Trip
                 </span>
             </a>
@@ -156,83 +167,87 @@
     </section>
 
     <!-- ░░░ EXPLORE & ACTIONS ░░░ -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="row g-4">
         
         <!-- Featured Destinations -->
-        <section class="lg:col-span-2">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="font-display text-3xl font-light text-[var(--text-primary)]">Curated Destinations</h2>
-                <a href="{% url 'city_search' %}" class="text-teal hover:text-[var(--teal-soft)] font-body text-xs uppercase tracking-wider transition-colors">Explore All &rarr;</a>
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h2 class="font-display fs-3 fw-light mb-0">Curated Destinations</h2>
+                <a href="{% url 'city_search' %}" class="text-info text-decoration-none font-body small text-uppercase fw-bold" style="letter-spacing: 0.1em;">Explore All <i class="bi bi-arrow-right"></i></a>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="row row-cols-1 row-cols-sm-2 g-3">
                 {% for city in recommended_cities|slice:":4" %}
-                <a href="{% url 'city_detail' city.pk %}" class="card relative overflow-hidden h-40 group cursor-pointer city-card block">
-                    {% if city.image %}
-                        <img src="{{ city.image.url }}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 city-image">
-                    {% else %}
-                        <div class="absolute inset-0 w-full h-full bg-[var(--ink)]-soft city-image"></div>
-                    {% endif %}
-                    <div class="absolute inset-0 bg-gradient-to-t from-[var(--ink)] to-transparent opacity-90 group-hover:opacity-100 transition-opacity city-overlay"></div>
-                    
-                    <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                        <div>
-                            <h3 class="font-display text-xl text-[var(--text-primary)]">{{ city.name }}</h3>
-                            <p class="font-body text-[10px] uppercase tracking-wider text-gold">{{ city.country }}</p>
+                <div class="col">
+                    <a href="{% url 'city_detail' city.pk %}" class="card border-0 text-white overflow-hidden text-decoration-none position-relative" style="height: 160px;">
+                        {% if city.image %}
+                            <img src="{{ city.image.url }}" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" alt="{{ city.name }}">
+                        {% else %}
+                            <div class="position-absolute top-0 start-0 w-100 h-100 bg-secondary"></div>
+                        {% endif %}
+                        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
+                        
+                        <div class="card-img-overlay d-flex flex-column justify-content-end p-3">
+                            <div class="d-flex justify-content-between align-items-end">
+                                <div>
+                                    <h3 class="font-display fs-5 mb-0 text-white">{{ city.name }}</h3>
+                                    <p class="font-body mb-0 text-primary small text-uppercase" style="letter-spacing: 0.05em; font-size: 0.7rem;">{{ city.country }}</p>
+                                </div>
+                                <span class="badge bg-light text-dark rounded-pill opacity-75">${{ city.cost_index }}/day</span>
+                            </div>
                         </div>
-                        <span class="badge badge-ghost">${{ city.cost_index }}/day</span>
-                    </div>
-                </a>
+                    </a>
+                </div>
                 {% endfor %}
             </div>
-        </section>
+        </div>
 
         <!-- Quick Actions -->
-        <section>
-            <h2 class="font-display text-3xl font-light text-[var(--text-primary)] mb-6">Quick Actions</h2>
-            <div class="card p-2">
-                <ul class="divide-y divide-[var(--ink-border)]">
+        <div class="col-lg-4">
+            <h2 class="font-display fs-3 fw-light mb-4">Quick Actions</h2>
+            <div class="card border-0 shadow-sm" style="background: var(--bs-tertiary-bg);">
+                <div class="list-group list-group-flush rounded-4">
                     {% if recent_trips %}
-                    <li>
-                        <a href="{% url 'itinerary_builder' recent_trips.first.pk %}" class="flex items-center justify-between p-4 hover:bg-black/5 dark:bg-white/5 transition-colors group">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-lg bg-gold/10 text-gold flex items-center justify-center">🏗️</span>
-                                <div>
-                                    <p class="font-body text-xs uppercase text-[var(--text-primary)]">Continue Planning</p>
-                                    <p class="text-[10px] text-[var(--text-muted)]">{{ recent_trips.first.name }}</p>
-                                </div>
+                    <a href="{% url 'itinerary_builder' recent_trips.first.pk %}" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 border-secondary-subtle" style="background: transparent;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center bg-primary text-dark" style="width: 40px; height: 40px;">
+                                <i class="bi bi-map"></i>
                             </div>
-                            <span class="text-[var(--text-muted)] group-hover:text-gold transition-colors">&rarr;</span>
-                        </a>
-                    </li>
+                            <div>
+                                <h6 class="font-body small text-uppercase mb-0 fw-bold">Continue Planning</h6>
+                                <small class="text-secondary" style="font-size: 0.7rem;">{{ recent_trips.first.name }}</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-secondary"></i>
+                    </a>
                     {% endif %}
-                    <li>
-                        <a href="{% url 'activity_search' %}" class="flex items-center justify-between p-4 hover:bg-black/5 dark:bg-white/5 transition-colors group">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-lg bg-teal/10 text-teal flex items-center justify-center">🎯</span>
-                                <div>
-                                    <p class="font-body text-xs uppercase text-[var(--text-primary)]">Browse Activities</p>
-                                    <p class="text-[10px] text-[var(--text-muted)]">Find things to do</p>
-                                </div>
+                    <a href="{% url 'activity_search' %}" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 border-secondary-subtle" style="background: transparent;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center bg-info text-dark" style="width: 40px; height: 40px;">
+                                <i class="bi bi-ticket-perforated"></i>
                             </div>
-                            <span class="text-[var(--text-muted)] group-hover:text-teal transition-colors">&rarr;</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{% url 'admin_analytics' %}" class="flex items-center justify-between p-4 hover:bg-black/5 dark:bg-white/5 transition-colors group">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-lg bg-[rgba(99,102,241,0.1)] text-[#6366F1] flex items-center justify-center">📊</span>
-                                <div>
-                                    <p class="font-body text-xs uppercase text-[var(--text-primary)]">Analytics</p>
-                                    <p class="text-[10px] text-[var(--text-muted)]">View platform stats</p>
-                                </div>
+                            <div>
+                                <h6 class="font-body small text-uppercase mb-0 fw-bold">Browse Activities</h6>
+                                <small class="text-secondary" style="font-size: 0.7rem;">Find things to do</small>
                             </div>
-                            <span class="text-[var(--text-muted)] group-hover:text-[#6366F1] transition-colors">&rarr;</span>
-                        </a>
-                    </li>
-                </ul>
+                        </div>
+                        <i class="bi bi-chevron-right text-secondary"></i>
+                    </a>
+                    <a href="{% url 'admin_analytics' %}" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 border-secondary-subtle" style="background: transparent;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 40px; height: 40px; background: #6366F1;">
+                                <i class="bi bi-graph-up"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-body small text-uppercase mb-0 fw-bold">Analytics</h6>
+                                <small class="text-secondary" style="font-size: 0.7rem;">View platform stats</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-secondary"></i>
+                    </a>
+                </div>
             </div>
-        </section>
+        </div>
     </div>
 
 </div>

@@ -5,11 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.contrib import messages
-from django.db.models import Count, Sum
+from django.db.models import Count
 from django.utils import timezone
 
 from .models import Trip, TripStop, TripActivity, PackingItem, TripNote
 from .forms import TripForm, TripStopForm, PackingItemForm, TripNoteForm
+from budget.forms import BudgetEntryForm
 from cities.models import City
 from activities.models import Activity
 
@@ -91,8 +92,8 @@ def trip_detail_view(request, pk):
     )
 
     stops = trip.stops.all()
-    total_estimated = trip.total_estimated_cost
-    over_budget = total_estimated > float(trip.total_budget) if trip.total_budget > 0 else False
+    total_estimated = Decimal(str(trip.total_estimated_cost))
+    over_budget = total_estimated > trip.total_budget if trip.total_budget > 0 else False
 
     # Packing stats
     packing_items = trip.packing_items.all()
@@ -108,7 +109,7 @@ def trip_detail_view(request, pk):
         'packed_count': packed_count,
         'total_packing': total_packing,
         'notes': trip.notes.all(),
-        'share_url': request.build_absolute_uri(f'/share/{trip.share_token}/'),
+        'share_url': request.build_absolute_uri(f'/trips/share/{trip.share_token}/'),
     }
     return render(request, 'trips/trip_detail.html', context)
 
@@ -129,14 +130,13 @@ def trip_edit_view(request, pk):
 
 
 @login_required
+@require_POST
 def trip_delete_view(request, pk):
     trip = get_object_or_404(Trip, pk=pk, user=request.user)
-    if request.method == 'POST':
-        name = trip.name
-        trip.delete()
-        messages.success(request, f'Trip "{name}" deleted.')
-        return redirect('trip_list')
-    return render(request, 'trips/trip_confirm_delete.html', {'trip': trip})
+    name = trip.name
+    trip.delete()
+    messages.success(request, f'Trip "{name}" deleted.')
+    return redirect('trip_list')
 
 
 @login_required
@@ -197,8 +197,11 @@ def add_stop_view(request, pk):
 
 @login_required
 @require_POST
-def remove_stop_view(request, stop_id):
-    stop = get_object_or_404(TripStop, pk=stop_id, trip__user=request.user)
+def remove_stop_view(request, stop_id, pk=None):
+    stop_query = TripStop.objects.filter(pk=stop_id, trip__user=request.user)
+    if pk is not None:
+        stop_query = stop_query.filter(trip_id=pk)
+    stop = get_object_or_404(stop_query)
     stop.delete()
     return JsonResponse({'status': 'ok'})
 
@@ -239,46 +242,66 @@ def remove_activity_view(request, ta_id):
 def budget_view(request, pk):
     trip = get_object_or_404(
         Trip.objects.prefetch_related(
-            'stops__city', 'stops__trip_activities__activity'
+            'stops__city', 'budget_entries__stop__city'
         ),
         pk=pk, user=request.user
     )
 
-    stops_data = []
+    if request.method == 'POST':
+        form = BudgetEntryForm(request.POST, trip=trip)
+        if form.is_valid():
+            entry = form.save(commit=False)
+            entry.trip = trip
+            entry.save()
+            messages.success(request, 'Budget entry added.')
+            return redirect('trip_budget', pk=trip.pk)
+        messages.error(request, 'Please fix the budget entry errors below.')
+    else:
+        form = BudgetEntryForm(trip=trip)
+
+    entries = trip.budget_entries.select_related('stop__city')
     category_costs = {}
-    daily_costs = {}
+    city_costs = {}
+    total_estimated = Decimal('0')
 
+    for entry in entries:
+        amount = entry.amount or Decimal('0')
+        total_estimated += amount
+        category = entry.get_category_display()
+        category_costs[category] = category_costs.get(category, 0.0) + float(amount)
+        city_name = entry.stop.city.name if entry.stop and entry.stop.city else 'General'
+        city_costs[city_name] = city_costs.get(city_name, 0.0) + float(amount)
+
+    stops_data = []
     for stop in trip.stops.all():
-        stop_activities = stop.trip_activities.select_related('activity').all()
-        activity_total = sum(float(ta.activity.estimated_cost) for ta in stop_activities)
-        stay_cost = float(stop.city.cost_index) * stop.duration_days if stop.city else 0
-
-        # Aggregate by category
-        for ta in stop_activities:
-            cat = ta.activity.get_category_display()
-            category_costs[cat] = category_costs.get(cat, 0) + float(ta.activity.estimated_cost)
-
-        category_costs['Accommodation'] = category_costs.get('Accommodation', 0) + stay_cost
-
+        stop_total = sum((entry.amount for entry in entries if entry.stop_id == stop.id), Decimal('0'))
         stops_data.append({
             'stop': stop,
-            'activity_cost': activity_total,
-            'stay_cost': stay_cost,
-            'total': activity_total + stay_cost,
+            'activity_cost': stop_total,
+            'stay_cost': Decimal('0'),
+            'total': stop_total,
         })
 
-    total_estimated = sum(s['total'] for s in stops_data)
-    over_budget = total_estimated > float(trip.total_budget) if trip.total_budget > 0 else False
-    avg_per_day = total_estimated / trip.duration_days if trip.duration_days > 0 else 0
+    over_budget = total_estimated > trip.total_budget if trip.total_budget > 0 else False
+    avg_per_day = total_estimated / trip.duration_days if trip.duration_days > 0 else Decimal('0')
+    budget_utilization = (
+        round((total_estimated / trip.total_budget) * 100, 2)
+        if trip.total_budget > 0 else Decimal('0')
+    )
+    progress_percent = min(budget_utilization, Decimal('100'))
 
     context = {
         'trip': trip,
+        'form': form,
+        'entries': entries,
         'stops_data': stops_data,
         'total_estimated': total_estimated,
         'over_budget': over_budget,
         'avg_per_day': round(avg_per_day, 2),
-        'category_labels': json.dumps(list(category_costs.keys())),
-        'category_values': json.dumps(list(category_costs.values())),
+        'budget_utilization': budget_utilization,
+        'progress_percent': progress_percent,
+        'category_costs': category_costs,
+        'city_costs': city_costs,
         'budget_total': float(trip.total_budget),
     }
     return render(request, 'trips/budget.html', context)
@@ -326,6 +349,15 @@ def packing_checklist_view(request, pk):
 
 @login_required
 @require_POST
+def reset_packing_view(request, pk):
+    trip = get_object_or_404(Trip, pk=pk, user=request.user)
+    trip.packing_items.update(is_packed=False)
+    messages.success(request, 'Checklist reset!')
+    return redirect('packing_checklist', pk=pk)
+
+
+@login_required
+@require_POST
 def toggle_packed_view(request, item_id):
     item = get_object_or_404(PackingItem, pk=item_id, trip__user=request.user)
     item.is_packed = not item.is_packed
@@ -360,6 +392,26 @@ def notes_view(request, pk):
 
 
 @login_required
+def note_edit_view(request, note_id):
+    note = get_object_or_404(TripNote, pk=note_id, trip__user=request.user)
+    if request.method == 'POST':
+        form = TripNoteForm(request.POST, instance=note, trip=note.trip)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Note updated.')
+            return redirect('trip_notes', pk=note.trip_id)
+    else:
+        form = TripNoteForm(instance=note, trip=note.trip)
+
+    return render(request, 'trips/notes.html', {
+        'trip': note.trip,
+        'form': form,
+        'notes': note.trip.notes.all(),
+        'editing_note': note,
+    })
+
+
+@login_required
 @require_POST
 def note_delete_view(request, note_id):
     note = get_object_or_404(TripNote, pk=note_id, trip__user=request.user)
@@ -386,7 +438,16 @@ def public_itinerary_view(request, token):
 @login_required
 @require_POST
 def copy_trip_view(request, token):
-    original = get_object_or_404(Trip, share_token=token, is_public=True)
+    original = get_object_or_404(
+        Trip.objects.prefetch_related(
+            'stops__trip_activities',
+            'packing_items',
+            'notes',
+            'budget_entries',
+        ),
+        share_token=token,
+        is_public=True,
+    )
 
     new_trip = Trip.objects.create(
         user=request.user,
@@ -398,6 +459,7 @@ def copy_trip_view(request, token):
         is_public=False,
     )
 
+    stop_map = {}
     for stop in original.stops.all():
         new_stop = TripStop.objects.create(
             trip=new_trip,
@@ -407,6 +469,7 @@ def copy_trip_view(request, token):
             order=stop.order,
             notes=stop.notes,
         )
+        stop_map[stop.id] = new_stop
         for ta in stop.trip_activities.all():
             TripActivity.objects.create(
                 stop=new_stop,
@@ -423,6 +486,22 @@ def copy_trip_view(request, token):
             category=item.category,
         )
 
+    for note in original.notes.all():
+        TripNote.objects.create(
+            trip=new_trip,
+            stop=stop_map.get(note.stop_id),
+            title=note.title,
+            content=note.content,
+        )
+
+    for entry in original.budget_entries.all():
+        new_trip.budget_entries.create(
+            stop=stop_map.get(entry.stop_id),
+            category=entry.category,
+            description=entry.description,
+            amount=entry.amount,
+        )
+
     messages.success(request, f'Trip copied! You can now customize "{new_trip.name}".')
     return redirect('itinerary_builder', pk=new_trip.pk)
 
@@ -433,10 +512,18 @@ def reorder_stops_view(request, pk):
     trip = get_object_or_404(Trip, pk=pk, user=request.user)
     try:
         data = json.loads(request.body)
-        for item in data.get('order', []):
-            TripStop.objects.filter(
-                pk=item['stop_id'], trip=trip
-            ).update(order=item['order'])
+        order = data.get('order', [])
+        if not isinstance(order, list):
+            return JsonResponse({'status': 'error', 'message': 'Invalid order'}, status=400)
+
+        if all(isinstance(stop_id, int) for stop_id in order):
+            for position, stop_id in enumerate(order):
+                TripStop.objects.filter(pk=stop_id, trip=trip).update(order=position)
+        else:
+            for item in order:
+                TripStop.objects.filter(
+                    pk=item['stop_id'], trip=trip
+                ).update(order=item['order'])
         return JsonResponse({'status': 'ok'})
-    except (json.JSONDecodeError, KeyError):
+    except (json.JSONDecodeError, KeyError, TypeError):
         return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)

@@ -98,3 +98,13 @@ class ProfileUpdateForm(forms.ModelForm):
             self.fields['first_name'].initial = self.instance.user.first_name
             self.fields['last_name'].initial = self.instance.user.last_name
             self.fields['email'].initial = self.instance.user.email
+
+    def clean_avatar(self):
+        avatar = self.cleaned_data.get('avatar', False)
+        if avatar:
+            if avatar.size > 2 * 1024 * 1024:
+                raise forms.ValidationError("Image file too large (max 2 MB).")
+            content_type = getattr(avatar, 'content_type', '')
+            if content_type and not content_type.startswith('image/'):
+                raise forms.ValidationError("Avatar must be an image file.")
+        return avatar

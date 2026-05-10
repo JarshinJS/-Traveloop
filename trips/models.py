@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.db.models import Sum
 from django.contrib.auth.models import User
 
 
@@ -28,6 +29,9 @@ class Trip(models.Model):
 
     @property
     def total_estimated_cost(self):
+        budget_total = self.budget_entries.aggregate(total=Sum('amount'))['total']
+        if budget_total is not None:
+            return budget_total
         return sum(stop.estimated_cost for stop in self.stops.all())
 
 
@@ -89,6 +93,9 @@ class PackingItem(models.Model):
     class Meta:
         ordering = ['category', 'name']
 
+    def __str__(self):
+        return self.name
+
 
 class TripNote(models.Model):
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name='notes')
@@ -100,3 +107,21 @@ class TripNote(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def body(self):
+        return self.content
+
+    @body.setter
+    def body(self, value):
+        self.content = value
+
+
+class JourneyNote(TripNote):
+    class Meta:
+        proxy = True
+        verbose_name = 'Journey note'
+        verbose_name_plural = 'Journey notes'

@@ -1,17 +1,30 @@
 # Environments
 .env
-.env.*
+.env.local
+.env.*.local
+.env.production.local
 !.env.example
 .venv/
 venv/
 env/
 ENV/
+.virtualenv
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.egg
+*.egg-info/
+dist/
+build/
+.Python
+*.pyo
+*.pyd
+.installed.cfg
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Django
 *.sqlite3
@@ -19,6 +32,8 @@ __pycache__/
 db.sqlite3
 media/
 staticfiles/
+/staticfiles/
+*.pot
 
 # Secrets and local configuration
 *.pem
@@ -26,15 +41,48 @@ staticfiles/
 *.crt
 *.p12
 *.pfx
-*.env
 local_settings.py
+secrets.json
+.secrets/
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+*.iml
 
 # Logs and runtime files
 *.log
 logs/
+*.pot
 
-# VS Code
-.vscode/
-
-# MacOS
+# OS specific
 .DS_Store
+Thumbs.db
+.env.swp
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+
+# Node (if applicable)
+node_modules/
+npm-debug.log
+
+# Misc
+.cache/
+*.bak
+*.tmp
+*.temp

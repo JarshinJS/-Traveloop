@@ -11,7 +11,9 @@ class City(models.Model):
         help_text="Average daily cost in USD"
     )
     popularity_score = models.IntegerField(default=0)
+    popularity_rating = models.IntegerField(default=0)
     image = models.ImageField(upload_to='cities/', blank=True, null=True)
+    hero_image = models.ImageField(upload_to='cities/', blank=True, null=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
@@ -21,3 +23,8 @@ class City(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.country}"
+
+    def save(self, *args, **kwargs):
+        if not self.popularity_rating and self.popularity_score:
+            self.popularity_rating = self.popularity_score
+        super().save(*args, **kwargs)

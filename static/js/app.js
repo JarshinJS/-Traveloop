@@ -1,5 +1,44 @@
 // Traveloop App JS - Premium UI Interactions
 
+// Apply Chart.js theme based on current data-bs-theme
+function applyChartTheme() {
+  const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+  if (!window.Chart) return;
+
+  const textColor = isDark ? '#A8A29E' : '#57534E';
+  const gridColor = isDark ? '#2C2420' : '#E7E5E4';
+  const bgColor   = isDark ? '#1E1A17' : '#FFFFFF';
+
+  Chart.defaults.color            = textColor;
+  Chart.defaults.borderColor      = gridColor;
+  Chart.defaults.backgroundColor  = bgColor;
+
+  if (Chart.defaults.plugins.legend) {
+    Chart.defaults.plugins.legend.labels.color = textColor;
+  }
+}
+
+// Re-apply when theme changes (observe attribute change)
+const themeObserver = new MutationObserver(() => applyChartTheme());
+themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+
+document.addEventListener('DOMContentLoaded', applyChartTheme);
+
+// Consistent palette for both modes
+const CHART_COLORS = {
+  gold:    '#F59E0B',
+  teal:    '#0D9488',
+  indigo:  '#6366F1',
+  rose:    '#F43F5E',
+  sky:     '#0EA5E9',
+  lime:    '#84CC16',
+};
+
+// Semi-transparent fills
+const CHART_BG = Object.fromEntries(
+  Object.entries(CHART_COLORS).map(([k, v]) => [k, v + '33'])
+);
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Starfield animation for dashboard hero
     initStarfield('starfield');
@@ -161,6 +200,7 @@ async function postForm(url, formData) {
         method: 'POST',
         body: formData,
         headers: {
+            'X-CSRFToken': getCsrfToken(),
             'X-Requested-With': 'XMLHttpRequest'
         }
     });

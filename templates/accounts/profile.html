@@ -3,145 +3,177 @@
 
 {% block title %}Profile — Traveloop{% endblock %}
 
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-body-secondary">Home</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Profile</li>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto py-8">
+<div class="container-fluid px-0 pb-5">
     
-    <div class="mb-10 text-center">
-        <h1 class="font-display text-4xl font-light mb-2">Your Profile</h1>
-        <p class="font-body text-xs uppercase tracking-wider text-[var(--text-muted)]">Manage your account and preferences</p>
+    <div class="text-center mb-5">
+        <h1 class="font-display display-4 fw-medium mb-2">Your Profile</h1>
+        <p class="font-body small text-uppercase text-secondary fw-bold mb-0" style="letter-spacing: 0.1em;">Manage your account and preferences</p>
     </div>
 
-    <!-- PROFILE HEADER -->
-    <div class="card p-8 mb-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
-        <!-- Background accent -->
-        <div class="absolute top-0 right-0 w-64 h-64 bg-[var(--gold)] opacity-[0.03] rounded-full blur-[60px]"></div>
+    <div class="row justify-content-center g-4">
+        <div class="col-12 col-xl-10">
 
-        <div class="relative group">
-            <div class="w-32 h-32 rounded-full overflow-hidden border-2 border-transparent group-hover:border-gold transition-all duration-500 p-1">
-                <div class="w-full h-full rounded-full overflow-hidden bg-[var(--ink)]">
-                    {% if user.profile.avatar %}
-                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="w-full h-full object-cover">
-                    {% else %}
-                        <div class="w-full h-full bg-gradient-to-br from-[#E8A838] to-[#0ECFB1] flex items-center justify-center">
-                            <span class="text-[var(--ink)] font-display text-5xl font-semibold">{{ user.username|first|upper }}</span>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-            <!-- Avatar Edit Button Overlay -->
-            <button class="absolute bottom-0 right-0 bg-[var(--ink-card)] border border-[var(--ink-border)] w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:border-gold hover:text-gold transition-colors"
-                    onclick="document.getElementById('avatarUpload').click()">
-                <span class="text-lg">📷</span>
-            </button>
-            <form method="post" enctype="multipart/form-data" id="avatarForm" class="hidden">
-                {% csrf_token %}
-                <input type="file" name="avatar" id="avatarUpload" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
-            </form>
-        </div>
+            <!-- PROFILE HEADER -->
+            <div class="card border-0 shadow-sm bg-body-tertiary overflow-hidden position-relative mb-4 p-4 p-md-5">
+                <!-- Background accent -->
+                <div class="position-absolute top-0 end-0 bg-warning opacity-25 rounded-circle" style="width: 300px; height: 300px; filter: blur(80px); transform: translate(30%, -30%);"></div>
 
-        <div class="text-center md:text-left z-10">
-            <h2 class="font-display text-3xl font-medium text-[var(--text-primary)] mb-1">{{ user.get_full_name|default:user.username }}</h2>
-            <div class="flex items-center gap-3 justify-center md:justify-start">
-                <span class="text-[var(--text-muted)]">{{ user.email }}</span>
-                <span class="w-1 h-1 rounded-full bg-[var(--ink-border)]"></span>
-                <span class="badge badge-gold">Member</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        <!-- PERSONAL INFO -->
-        <div class="card p-8">
-            <div class="flex items-center justify-between mb-6 border-b border-[var(--ink-border)] pb-4">
-                <h3 class="font-body text-xs uppercase tracking-widest text-[var(--text-primary)]">
-                    <span class="border-b-2 border-gold pb-4">Personal Info</span>
-                </h3>
-            </div>
-            
-            <form method="post" class="space-y-6">
-                {% csrf_token %}
-                <input type="hidden" name="update_info" value="1">
-                
-                <div class="form-group">
-                    <label class="form-label">First Name</label>
-                    <input type="text" name="first_name" value="{{ user.first_name }}" class="input-field" placeholder="Jane">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Last Name</label>
-                    <input type="text" name="last_name" value="{{ user.last_name }}" class="input-field" placeholder="Doe">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" value="{{ user.email }}" class="input-field" placeholder="jane@example.com">
-                </div>
-
-                <button type="submit" class="btn-ghost w-full">Save Changes</button>
-            </form>
-        </div>
-
-        <!-- PREFERENCES & DANGER ZONE -->
-        <div class="space-y-8">
-            <div class="card p-8">
-                <div class="flex items-center justify-between mb-6 border-b border-[var(--ink-border)] pb-4">
-                    <h3 class="font-body text-xs uppercase tracking-widest text-[var(--text-primary)]">
-                        <span class="border-b-2 border-teal pb-4">Preferences</span>
-                    </h3>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center p-3 rounded-lg hover:bg-black/5 dark:bg-white/5 transition-colors">
-                        <span class="text-sm text-[var(--text-muted)]">Language</span>
-                        <select class="input-field py-2 w-auto bg-transparent border-none">
-                            <option>English (US)</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-between items-center p-3 rounded-lg hover:bg-black/5 dark:bg-white/5 transition-colors">
-                        <span class="text-sm text-[var(--text-muted)]">Currency</span>
-                        <select class="input-field py-2 w-auto bg-transparent border-none">
-                            <option>USD ($)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card p-8 border-[rgba(239,68,68,0.2)]">
-                <div class="flex items-center justify-between mb-6 border-b border-[var(--ink-border)] pb-4">
-                    <h3 class="font-body text-xs uppercase tracking-widest text-red-500">
-                        Danger Zone
-                    </h3>
-                </div>
-                <p class="text-sm text-[var(--text-muted)] mb-6">
-                    Once you delete your account, there is no going back. Please be certain.
-                </p>
-                
-                <div x-data="{ open: false }">
-                    <button @click="open = true" class="btn-ghost w-full hover:bg-[rgba(239,68,68,0.1)] hover:text-red-500 hover:border-[var(--danger)]">
-                        Delete Account
-                    </button>
-
-                    <!-- Modal -->
-                    <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center px-4" style="display: none;">
-                        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="open = false"></div>
-                        <div class="glass rounded-[var(--radius-lg)] p-8 max-w-sm w-full relative z-10 border-[rgba(239,68,68,0.3)] shadow-[0_0_40px_rgba(239,68,68,0.1)]">
-                            <h3 class="font-display text-2xl font-medium mb-4">Are you absolutely sure?</h3>
-                            <p class="text-[var(--text-muted)] text-sm mb-8">This action cannot be undone. This will permanently delete your account, trips, and all associated data.</p>
-                            <form method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="delete_account" value="1">
-                                <div class="flex gap-4">
-                                    <button type="button" @click="open = false" class="btn-ghost flex-1">Cancel</button>
-                                    <button type="submit" class="btn-primary flex-1 !bg-[var(--danger)] !shadow-none hover:!bg-red-600">Delete</button>
+                <div class="d-flex flex-column flex-md-row align-items-center gap-4 gap-md-5 position-relative z-1">
+                    <div class="position-relative">
+                        <div class="rounded-circle overflow-hidden border border-4 border-body shadow-sm" style="width: 150px; height: 150px; transition: border-color 0.3s;" onmouseover="this.classList.add('border-warning')" onmouseout="this.classList.remove('border-warning')">
+                            {% if user.profile.avatar %}
+                                <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="w-100 h-100 object-fit-cover">
+                            {% else %}
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, var(--bs-warning), var(--bs-info));">
+                                    <span class="font-display display-3 text-dark fw-bold">{{ user.username|first|upper }}</span>
                                 </div>
-                            </form>
+                            {% endif %}
                         </div>
+                        <!-- Avatar Edit Button Overlay -->
+                        <button class="btn btn-body position-absolute bottom-0 end-0 rounded-circle shadow d-flex align-items-center justify-content-center p-0 border" style="width: 40px; height: 40px; transform: translate(-10%, -10%); transition: all 0.3s;"
+                                onclick="document.getElementById('avatarUpload').click()"
+                                onmouseover="this.classList.add('text-warning', 'border-warning')" onmouseout="this.classList.remove('text-warning', 'border-warning')">
+                            <i class="bi bi-camera-fill fs-5"></i>
+                        </button>
+                        <form method="post" enctype="multipart/form-data" id="avatarForm" class="d-none">
+                            {% csrf_token %}
+                            <input type="file" name="avatar" id="avatarUpload" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
+                        </form>
+                    </div>
+
+                    <div class="text-center text-md-start">
+                        <h2 class="font-display display-6 fw-medium mb-2">{{ user.get_full_name|default:user.username }}</h2>
+                        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-3">
+                            <span class="text-secondary">{{ user.email }}</span>
+                            <span class="text-secondary-subtle">|</span>
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2 shadow-sm" style="letter-spacing: 0.05em;">Member</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                
+                <!-- PERSONAL INFO -->
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm bg-body h-100 p-4 p-md-5 border border-secondary-subtle">
+                        <div class="mb-4 pb-3 border-bottom border-secondary-subtle">
+                            <h3 class="font-body small text-uppercase fw-bold mb-0" style="letter-spacing: 0.1em;">
+                                <span class="border-bottom border-warning border-3 pb-3">Personal Info</span>
+                            </h3>
+                        </div>
+                        
+                        <form method="post" class="d-flex flex-column gap-4">
+                            {% csrf_token %}
+                            <input type="hidden" name="update_info" value="1">
+                            
+                            <div>
+                                <label class="form-label small text-secondary text-uppercase fw-bold" style="letter-spacing: 0.05em;">First Name</label>
+                                <input type="text" name="first_name" value="{{ user.first_name }}" class="form-control bg-body-tertiary" placeholder="Jane">
+                            </div>
+                            
+                            <div>
+                                <label class="form-label small text-secondary text-uppercase fw-bold" style="letter-spacing: 0.05em;">Last Name</label>
+                                <input type="text" name="last_name" value="{{ user.last_name }}" class="form-control bg-body-tertiary" placeholder="Doe">
+                            </div>
+
+                            <div>
+                                <label class="form-label small text-secondary text-uppercase fw-bold" style="letter-spacing: 0.05em;">Email</label>
+                                <input type="email" name="email" value="{{ user.email }}" class="form-control bg-body-tertiary" placeholder="jane@example.com">
+                            </div>
+
+                            <button type="submit" class="btn btn-outline-primary rounded-pill py-2 mt-2 w-100 fw-bold">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- PREFERENCES & DANGER ZONE -->
+                <div class="col-md-6 d-flex flex-column gap-4">
+                    <div class="card border-0 shadow-sm bg-body p-4 p-md-5 border border-secondary-subtle">
+                        <div class="mb-4 pb-3 border-bottom border-secondary-subtle">
+                            <h3 class="font-body small text-uppercase fw-bold mb-0" style="letter-spacing: 0.1em;">
+                                <span class="border-bottom border-info border-3 pb-3">Preferences</span>
+                            </h3>
+                        </div>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="d-flex justify-content-between align-items-center p-3 rounded-3 hover-bg-subtle transition-colors">
+                                <span class="fw-medium text-secondary">Language</span>
+                                <select class="form-select bg-body-tertiary border-0 w-auto">
+                                    <option>English (US)</option>
+                                </select>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center p-3 rounded-3 hover-bg-subtle transition-colors">
+                                <span class="fw-medium text-secondary">Currency</span>
+                                <select class="form-select bg-body-tertiary border-0 w-auto">
+                                    <option>USD ($)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm bg-danger bg-opacity-10 p-4 p-md-5 border border-danger">
+                        <div class="mb-4 pb-3 border-bottom border-danger border-opacity-25">
+                            <h3 class="font-body small text-uppercase fw-bold text-danger mb-0" style="letter-spacing: 0.1em;">
+                                Danger Zone
+                            </h3>
+                        </div>
+                        <p class="text-secondary mb-4">
+                            Once you delete your account, there is no going back. Please be certain.
+                        </p>
+                        
+                        <div x-data="{ open: false, modalInstance: null }" x-init="
+                            $nextTick(() => {
+                                const modalEl = document.getElementById('deleteAccountModal');
+                                if (modalEl) {
+                                    modalInstance = new bootstrap.Modal(modalEl);
+                                    modalEl.addEventListener('hidden.bs.modal', () => { open = false; });
+                                }
+                            });
+                            $watch('open', val => {
+                                if (val && modalInstance) modalInstance.show();
+                                if (!val && modalInstance) modalInstance.hide();
+                            });
+                        ">
+                            <button @click="open = true" class="btn btn-outline-danger rounded-pill w-100 py-2 fw-bold">
+                                Delete Account
+                            </button>
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+                              <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow-lg border-danger border-top border-4" style="background: var(--bs-body-bg);">
+                                  <div class="modal-body p-4 p-md-5 text-center">
+                                      <div class="mb-4 text-danger">
+                                          <i class="bi bi-exclamation-octagon display-1"></i>
+                                      </div>
+                                      <h3 class="font-display fs-4 fw-medium mb-3">Are you absolutely sure?</h3>
+                                      <p class="text-secondary mb-4">This action cannot be undone. This will permanently delete your account, trips, and all associated data.</p>
+                                      
+                                      <form method="post" action="{% url 'account_delete' %}">
+                                          {% csrf_token %}
+                                          <input type="hidden" name="delete_account" value="1">
+                                          <div class="d-flex gap-3 mt-4">
+                                              <button type="button" @click="open = false" class="btn btn-outline-secondary rounded-pill w-50">Cancel</button>
+                                              <button type="submit" class="btn btn-danger rounded-pill w-50 fw-bold">Delete Account</button>
+                                          </div>
+                                      </form>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
             </div>
         </div>
-
     </div>
 </div>
 {% endblock %}

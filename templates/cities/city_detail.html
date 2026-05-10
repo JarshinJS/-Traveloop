@@ -3,142 +3,181 @@
 
 {% block title %}{{ city.name }}, {{ city.country }} — Traveloop{% endblock %}
 
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-body-secondary">Home</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'city_search' %}" class="text-decoration-none text-body-secondary">Explore Cities</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{{ city.name }}</li>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-8 pb-12">
+<div class="d-flex flex-column gap-4 pb-5">
     
     <!-- ░░░ HERO ░░░ -->
-    <div class="relative rounded-[var(--radius-xl)] overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-[var(--ink-border)] h-[400px]">
+    <div class="card border-0 shadow-sm overflow-hidden text-white position-relative" style="height: 450px; background: var(--bs-tertiary-bg);">
         {% if city.image %}
-            <img src="{{ city.image.url }}" class="absolute inset-0 w-full h-full object-cover">
+            <img src="{{ city.image.url }}" class="position-absolute w-100 h-100 object-fit-cover" alt="{{ city.name }}">
         {% else %}
-            <div class="absolute inset-0 w-full h-full bg-[var(--ink)]-soft flex items-center justify-center">
-                <span class="font-display text-8xl opacity-10 text-white">🏙️</span>
+            <div class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-buildings display-1 text-secondary opacity-25"></i>
             </div>
         {% endif %}
         
-        <div class="absolute inset-0 bg-gradient-to-t from-[var(--ink)] via-[rgba(10,14,26,0.6)] to-transparent opacity-90"></div>
+        <div class="position-absolute w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 100%);"></div>
         
-        <div class="absolute top-6 left-6 z-10">
-            <a href="{% url 'city_search' %}" class="btn-ghost !py-2 !px-4 !bg-[rgba(255,255,255,0.05)] backdrop-blur-md !border-transparent hover:!border-gold">
-                &larr; Back to Destinations
+        <div class="position-absolute top-0 start-0 m-4 z-1">
+            <a href="{% url 'city_search' %}" class="btn btn-outline-light rounded-pill px-3 py-2" style="backdrop-filter: blur(4px);">
+                <i class="bi bi-arrow-left me-1"></i> Back to Destinations
             </a>
         </div>
 
-        <div class="absolute bottom-8 left-8 right-8 z-10">
-            <div class="flex items-center gap-3 mb-3">
-                <span class="badge badge-gold backdrop-blur-md">{{ city.region }}</span>
-                <span class="badge badge-teal backdrop-blur-md">${{ city.cost_index }}/day</span>
+        <div class="card-img-overlay d-flex flex-column justify-content-end p-4 p-md-5">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <span class="badge bg-primary text-dark rounded-pill px-3 py-2 shadow-sm fs-6">{{ city.region }}</span>
+                <span class="badge bg-warning text-dark rounded-pill px-3 py-2 shadow-sm fs-6">${{ city.cost_index }}/day</span>
             </div>
-            <h1 class="font-display text-6xl md:text-7xl font-light text-[var(--text-primary)] mb-2 drop-shadow-lg">{{ city.name }}</h1>
-            <p class="font-body text-sm text-gold uppercase tracking-widest">{{ city.country }}</p>
+            <h1 class="font-display display-2 fw-medium mb-1 text-shadow">{{ city.name }}</h1>
+            <p class="font-body fs-5 text-warning text-uppercase fw-bold mb-0 text-shadow" style="letter-spacing: 0.2em;">{{ city.country }}</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="row g-4 mt-2">
         
-        <!-- ABOUT -->
-        <div class="lg:col-span-2 space-y-8">
-            <div class="card p-8 bg-[rgba(255,255,255,0.01)] border-none">
-                <h2 class="font-display text-3xl font-light text-[var(--text-primary)] mb-4">About the Destination</h2>
-                <p class="font-body text-sm text-[var(--text-muted)] leading-relaxed">
+        <!-- ABOUT & ACTIVITIES -->
+        <div class="col-lg-8 d-flex flex-column gap-5">
+            
+            <section class="card border-0 shadow-sm bg-body-tertiary p-4 p-md-5">
+                <h2 class="font-display fs-3 fw-light mb-4">About the Destination</h2>
+                <p class="font-body fs-5 text-secondary lh-lg mb-0">
                     {{ city.description|default:"Discover the hidden gems, culture, and architecture of this beautiful destination." }}
                 </p>
-            </div>
+            </section>
             
             <!-- ACTIVITIES LIST -->
-            <div>
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="font-display text-3xl font-light text-[var(--text-primary)]">Curated Activities</h2>
-                    <span class="badge badge-ghost">{{ activities.count }} Experiences</span>
+            <section>
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h2 class="font-display fs-3 fw-light mb-0">Curated Activities</h2>
+                    <span class="badge bg-secondary text-light rounded-pill px-3 py-2 fs-6">{{ activities.count }} Experiences</span>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="row row-cols-1 row-cols-md-2 g-4">
                     {% for activity in activities %}
-                    <div class="card p-6 group hover:border-teal transition-colors cursor-pointer" onclick="location.href='{% url 'activity_detail' activity.pk %}'">
-                        <div class="flex items-start justify-between mb-3">
-                            <div>
-                                <h3 class="font-medium text-lg text-[var(--text-primary)] mb-1 group-hover:text-teal transition-colors">{{ activity.name }}</h3>
-                                <span class="badge badge-ghost text-[9px]">{{ activity.get_category_display }}</span>
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm bg-body-tertiary p-4 cursor-pointer transition-all hover-shadow hover-border-primary" onclick="location.href='{% url 'activity_detail' activity.pk %}'">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h3 class="font-display fs-5 text-body mb-2 pe-2">{{ activity.name }}</h3>
+                                    <span class="badge bg-secondary bg-opacity-10 text-body border text-uppercase" style="letter-spacing: 0.05em; font-size: 0.7rem;">{{ activity.get_category_display }}</span>
+                                </div>
+                                {% if activity.is_popular %}
+                                <span class="fs-4" title="Popular choice">🔥</span>
+                                {% endif %}
                             </div>
-                            {% if activity.is_popular %}
-                            <span class="text-lg" title="Popular choice">🔥</span>
-                            {% endif %}
-                        </div>
-                        <p class="text-xs text-[var(--text-muted)] line-clamp-2 mb-4">{{ activity.description }}</p>
-                        <div class="flex items-center justify-between border-t border-[var(--ink-border)] pt-4">
-                            <span class="font-mono text-[10px] text-teal">${{ activity.estimated_cost|floatformat:0 }} est.</span>
-                            <span class="font-mono text-[10px] text-[var(--text-muted)]">{{ activity.duration_hours }}h duration</span>
+                            
+                            <p class="small text-secondary mb-4 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">{{ activity.description }}</p>
+                            
+                            <div class="d-flex align-items-center justify-content-between border-top pt-3 mt-auto">
+                                <span class="font-mono text-success fw-bold flex-shrink-0">${{ activity.estimated_cost|floatformat:0 }} est.</span>
+                                <span class="font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.05em;"><i class="bi bi-clock-history me-1"></i> {{ activity.duration_hours }}h</span>
+                            </div>
                         </div>
                     </div>
                     {% empty %}
-                    <div class="col-span-full empty-state py-12">
-                        <span class="text-4xl opacity-20 mb-4">🎯</span>
-                        <p class="text-sm text-[var(--text-muted)]">No activities listed for this destination yet.</p>
+                    <div class="col-12">
+                        <div class="text-center py-5 bg-body-tertiary rounded-4 border-0 shadow-sm">
+                            <i class="bi bi-ticket-detailed display-1 text-secondary opacity-25 mb-4 d-block"></i>
+                            <h3 class="font-display fs-4 fw-light mb-0 text-secondary">No activities listed for this destination yet.</h3>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
-            </div>
+            </section>
         </div>
         
         <!-- SIDEBAR STATS & ACTIONS -->
-        <div class="space-y-6">
-            <div class="card p-8 border-[var(--ink-border)]">
-                <h3 class="font-display text-2xl mb-6">Destination Intel</h3>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm bg-body-tertiary p-4 p-md-5 position-sticky" style="top: 100px;">
+                <h3 class="font-display fs-4 mb-4">Destination Intel</h3>
                 
-                <div class="space-y-6">
+                <div class="d-flex flex-column gap-4">
                     <div>
-                        <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-1">Average Cost</p>
-                        <p class="font-mono text-2xl text-gold">${{ city.cost_index }}<span class="text-sm text-[var(--text-muted)]"> / day</span></p>
+                        <p class="font-body small text-uppercase text-secondary fw-bold mb-1" style="letter-spacing: 0.1em;">Average Cost</p>
+                        <p class="font-mono display-5 text-warning fw-medium mb-0">${{ city.cost_index }}<span class="fs-5 text-secondary fw-light"> / day</span></p>
                     </div>
                     
                     <div>
-                        <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-1">Popularity</p>
-                        <div class="flex items-center gap-2">
-                            <div class="flex text-gold text-sm">
+                        <p class="font-body small text-uppercase text-secondary fw-bold mb-2" style="letter-spacing: 0.1em;">Popularity</p>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex text-warning fs-5">
                                 {% for i in "12345" %}
-                                    ★
+                                    <i class="bi bi-star-fill me-1"></i>
                                 {% endfor %}
                             </div>
-                            <span class="font-mono text-xs text-[var(--text-primary)]">{{ city.popularity_score }}/100</span>
+                            <span class="font-mono small text-body fw-bold ms-2">{{ city.popularity_score }}/100</span>
                         </div>
                     </div>
                     
-                    <div class="pt-6 border-t border-[var(--ink-border)]">
+                    <div class="pt-4 border-top mt-2">
                         {% if user.is_authenticated %}
-                        <div x-data="{ showModal: false }">
-                            <button @click="showModal = true" class="btn-primary w-full">Add to Journey</button>
+                        <div x-data="{ showModal: false, modalInstance: null }" x-init="
+                            $nextTick(() => {
+                                const modalEl = document.getElementById('addToJourneyModal');
+                                if(modalEl) {
+                                    modalInstance = new bootstrap.Modal(modalEl);
+                                    modalEl.addEventListener('hidden.bs.modal', () => { showModal = false; });
+                                }
+                            });
+                            $watch('showModal', val => {
+                                if (val && modalInstance) modalInstance.show();
+                                if (!val && modalInstance) modalInstance.hide();
+                            });
+                        ">
+                            <button @click="showModal = true" class="btn btn-primary rounded-pill w-100 py-3 fw-bold shadow-sm">
+                                <i class="bi bi-plus-lg me-1"></i> Add to Journey
+                            </button>
                             
                             <!-- MODAL -->
-                            <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
-                                <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="showModal = false"></div>
-                                <div class="glass rounded-[var(--radius-xl)] p-8 max-w-md w-full relative z-10 border border-[var(--ink-border)] shadow-2xl">
-                                    <h3 class="font-display text-3xl font-medium mb-2">Add to Journey</h3>
-                                    <p class="text-sm text-[var(--text-muted)] mb-6">Select a trip to add <strong class="text-gold">{{ city.name }}</strong></p>
-                                    
-                                    <div class="space-y-2 max-h-60 overflow-y-auto hide-scrollbar mb-6">
-                                        {% for trip in user.trips.all %}
-                                        <a href="{% url 'itinerary_builder' trip.pk %}" class="block p-4 rounded-xl border border-[var(--ink-border)] bg-black/5 dark:bg-white/5 hover:border-teal hover:bg-[rgba(14,207,177,0.05)] transition-colors group">
-                                            <div class="flex justify-between items-center">
-                                                <span class="font-medium text-[var(--text-primary)] group-hover:text-teal transition-colors">{{ trip.name }}</span>
-                                                <span class="text-teal opacity-0 group-hover:opacity-100">&rarr;</span>
-                                            </div>
-                                        </a>
-                                        {% empty %}
-                                        <div class="text-center py-6 text-sm text-[var(--text-muted)] border border-dashed border-[var(--ink-border)] rounded-xl">
-                                            No active journeys found.
-                                        </div>
-                                        {% endfor %}
+                            <div class="modal fade" id="addToJourneyModal" tabindex="-1" aria-labelledby="addToJourneyModalLabel" aria-hidden="true">
+                              <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow-lg" style="background: var(--bs-body-bg);">
+                                  <div class="modal-header border-bottom border-secondary-subtle">
+                                    <div>
+                                        <h5 class="modal-title font-display fs-4 mb-0" id="addToJourneyModalLabel">Add to Journey</h5>
+                                        <p class="text-secondary small mb-0 mt-1">Select a trip to add <strong class="text-warning fw-bold">{{ city.name }}</strong></p>
                                     </div>
-                                    
-                                    <div class="flex gap-4">
-                                        <button type="button" @click="showModal = false" class="btn-ghost flex-1">Cancel</button>
-                                        <a href="{% url 'trip_create' %}" class="btn-primary flex-1 text-center">New Trip</a>
-                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                  </div>
+                                  <div class="modal-body p-4">
+                                      <div class="list-group list-group-flush mb-4 overflow-y-auto" style="max-height: 250px;">
+                                          {% for trip in user.trips.all %}
+                                          <form method="post" action="{% url 'add_to_trip' city.pk %}" class="mb-2">
+                                              {% csrf_token %}
+                                              <input type="hidden" name="trip_id" value="{{ trip.pk }}">
+                                          <button type="submit" class="list-group-item list-group-item-action bg-body-tertiary border border-secondary-subtle rounded-3 p-3 transition-all w-100 text-start">
+                                              <div class="d-flex justify-content-between align-items-center mb-1">
+                                                  <span class="fw-medium text-body">{{ trip.name }}</span>
+                                                  <i class="bi bi-plus-lg text-info"></i>
+                                              </div>
+                                              <span class="font-mono small text-secondary opacity-75">{{ trip.start_date|date:"M d" }} — {{ trip.end_date|date:"M d, Y" }}</span>
+                                          </button>
+                                          </form>
+                                          {% empty %}
+                                          <div class="text-center py-4 border border-dashed rounded-3 bg-body">
+                                              <p class="text-secondary mb-0">No active journeys found.</p>
+                                          </div>
+                                          {% endfor %}
+                                      </div>
+                                      
+                                      <div class="d-flex gap-3 pt-2 border-top border-secondary-subtle">
+                                          <button type="button" class="btn btn-outline-secondary rounded-pill w-50" data-bs-dismiss="modal">Cancel</button>
+                                          <a href="{% url 'trip_create' %}" class="btn btn-primary rounded-pill w-50">New Trip</a>
+                                      </div>
+                                  </div>
                                 </div>
+                              </div>
                             </div>
                         </div>
                         {% else %}
-                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn-primary w-full text-center">Log in to add</a>
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-primary rounded-pill w-100 py-3 fw-bold">Log in to add</a>
                         {% endif %}
                     </div>
                 </div>

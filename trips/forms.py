@@ -17,6 +17,16 @@ class TripForm(forms.ModelForm):
             'is_public': forms.CheckboxInput(attrs={'class': 'checkbox-custom'}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+
+        if start_date and end_date:
+            if start_date > end_date:
+                raise forms.ValidationError("Start date must be before or equal to the end date.")
+        return cleaned_data
+
 
 class TripStopForm(forms.ModelForm):
     city = forms.ModelChoiceField(
@@ -32,6 +42,15 @@ class TripStopForm(forms.ModelForm):
             'departure_date': forms.DateInput(attrs={'class': 'form-input', 'type': 'date'}),
             'notes': forms.Textarea(attrs={'class': 'form-input', 'rows': 2, 'placeholder': 'Notes about this stop...'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        arrival_date = cleaned_data.get('arrival_date')
+        departure_date = cleaned_data.get('departure_date')
+
+        if arrival_date and departure_date and arrival_date > departure_date:
+            raise forms.ValidationError("Arrival date must be before or equal to the departure date.")
+        return cleaned_data
 
 
 class PackingItemForm(forms.ModelForm):

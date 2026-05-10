@@ -3,146 +3,161 @@
 
 {% block title %}Itinerary: {{ trip.name }} — Traveloop{% endblock %}
 
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-body-secondary">Home</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'trip_detail' trip.pk %}" class="text-decoration-none text-body-secondary">{{ trip.name }}</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Itinerary</li>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-8" x-data="{ viewMode: 'timeline' }">
+<div class="d-flex flex-column gap-4 pb-5" x-data="{ viewMode: 'timeline' }">
     
     <!-- HEADER -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--ink-border)] pb-6">
+    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-4 border-bottom pb-4">
         <div>
-            <p class="font-body text-[10px] uppercase tracking-widest text-gold mb-1 flex items-center gap-2">
-                <a href="{% url 'trip_detail' trip.pk %}" class="hover:text-[var(--gold-light)]">&larr; Back to Overview</a>
-            </p>
-            <h1 class="font-display text-4xl md:text-5xl font-light text-[var(--text-primary)] mb-2">{{ trip.name }}</h1>
-            <p class="font-mono text-xs text-[var(--text-muted)]">{{ trip.start_date|date:"F j, Y" }} — {{ trip.end_date|date:"F j, Y" }}</p>
+            <a href="{% url 'trip_detail' trip.pk %}" class="text-decoration-none small text-uppercase text-primary fw-bold d-flex align-items-center gap-1 mb-2" style="letter-spacing: 0.1em;">
+                <i class="bi bi-arrow-left"></i> Back to Overview
+            </a>
+            <h1 class="font-display display-5 fw-medium mb-1">{{ trip.name }}</h1>
+            <p class="font-mono small text-secondary mb-0">{{ trip.start_date|date:"F j, Y" }} — {{ trip.end_date|date:"F j, Y" }}</p>
         </div>
         
-        <div class="flex items-center gap-4">
-            <div class="flex p-1 bg-black/5 dark:bg-white/5 border border-[var(--ink-border)] rounded-full">
-                <button class="px-4 py-2 rounded-full text-xs font-body uppercase tracking-wider transition-all"
-                        :class="viewMode === 'timeline' ? 'bg-[var(--ink-card)] text-gold shadow-md' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'"
+        <div class="d-flex align-items-center gap-3">
+            <div class="nav nav-pills bg-body-tertiary p-1 rounded-pill border shadow-sm">
+                <button class="nav-link rounded-pill fw-bold text-uppercase px-4 py-2" style="letter-spacing: 0.05em; font-size: 0.8rem;"
+                        :class="viewMode === 'timeline' ? 'active shadow-sm' : 'text-secondary'"
                         @click="viewMode = 'timeline'">Timeline</button>
-                <button class="px-4 py-2 rounded-full text-xs font-body uppercase tracking-wider transition-all"
-                        :class="viewMode === 'list' ? 'bg-[var(--ink-card)] text-gold shadow-md' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'"
+                <button class="nav-link rounded-pill fw-bold text-uppercase px-4 py-2" style="letter-spacing: 0.05em; font-size: 0.8rem;"
+                        :class="viewMode === 'list' ? 'active shadow-sm' : 'text-secondary'"
                         @click="viewMode = 'list'">List</button>
             </div>
-            <a href="{% url 'itinerary_builder' trip.pk %}" class="btn-primary !px-6 !py-2.5">
-                Edit Plan
+            <a href="{% url 'itinerary_builder' trip.pk %}" class="btn btn-primary rounded-pill px-4 py-2 text-nowrap">
+                <i class="bi bi-tools me-1"></i> Edit Plan
             </a>
         </div>
     </div>
 
     <!-- TIMELINE VIEW -->
-    <div x-show="viewMode === 'timeline'" x-transition.opacity.duration.400ms class="max-w-4xl mx-auto py-8">
-        {% if stops %}
-        <div class="timeline ml-4 lg:ml-8">
-            {% for stop in stops %}
-            <div class="timeline-item mb-16 last:mb-0">
-                
-                <!-- Stop Header -->
-                <div class="mb-6 relative">
-                    <!-- Decorative circle for timeline -->
-                    <div class="absolute -left-[37px] top-2 w-4 h-4 rounded-full bg-[var(--teal)] shadow-[0_0_15px_rgba(14,207,177,0.5)] border-4 border-[var(--ink)]"></div>
-                    
-                    <h3 class="font-display text-4xl font-light text-[var(--text-primary)] mb-1">{{ stop.city.name }}</h3>
-                    <p class="font-mono text-xs text-[var(--text-muted)]">{{ stop.arrival_date|date:"M d" }} &rarr; {{ stop.departure_date|date:"M d" }} <span class="mx-2">|</span> {{ stop.duration_days }} Days</p>
-                </div>
-                
-                <!-- Activities -->
-                <div class="space-y-4 pl-4 lg:pl-0">
-                    {% for ta in stop.trip_activities.all %}
-                    <div class="glass p-5 rounded-[var(--radius-lg)] border border-[var(--ink-border)] flex flex-col md:flex-row md:items-center gap-4 group hover:border-teal transition-colors">
-                        <!-- Time (if scheduled) -->
-                        <div class="w-20 flex-shrink-0">
-                            {% if ta.scheduled_time %}
-                            <span class="font-mono text-[10px] text-teal bg-teal/10 px-2 py-1 rounded">{{ ta.scheduled_time|time:"H:i" }}</span>
-                            {% else %}
-                            <span class="font-mono text-[10px] text-[var(--text-ghost)] uppercase">Anytime</span>
-                            {% endif %}
+    <div x-show="viewMode === 'timeline'" x-transition.opacity.duration.400ms class="container-fluid px-0">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                {% if stops %}
+                <div class="position-relative border-start border-2 border-secondary-subtle ms-3 py-2">
+                    {% for stop in stops %}
+                    <div class="position-relative mb-5 ps-5 {% if forloop.last %}mb-0{% endif %}">
+                        
+                        <!-- Decorative circle for timeline -->
+                        <div class="position-absolute bg-primary rounded-circle" style="width: 20px; height: 20px; left: -11px; top: 4px; outline: 6px solid var(--bs-body-bg);"></div>
+                        
+                        <!-- Stop Header -->
+                        <div class="mb-4">
+                            <h3 class="font-display fs-2 fw-medium text-body mb-1">{{ stop.city.name }}</h3>
+                            <p class="font-mono small text-secondary mb-0">
+                                {{ stop.arrival_date|date:"M d" }} <i class="bi bi-arrow-right text-primary mx-1"></i> {{ stop.departure_date|date:"M d" }} 
+                                <span class="mx-2 text-secondary-subtle">|</span> {{ stop.duration_days }} Days
+                            </p>
                         </div>
                         
-                        <!-- Activity Details -->
-                        <div class="flex-1 min-w-0">
-                            <h4 class="font-medium text-base text-[var(--text-primary)] truncate mb-1">{{ ta.activity.name }}</h4>
-                            <div class="flex items-center gap-3">
-                                <span class="badge badge-ghost text-[9px]">{{ ta.activity.get_category_display }}</span>
-                                <span class="font-body text-[10px] uppercase tracking-wider text-[var(--text-muted)]">{{ ta.activity.duration_hours }}h duration</span>
+                        <!-- Activities -->
+                        <div class="d-flex flex-column gap-3">
+                            {% for ta in stop.trip_activities.all %}
+                            <div class="card border-0 shadow-sm bg-body-tertiary transition-all hover-border-primary">
+                                <div class="card-body p-4 d-flex flex-column flex-sm-row align-items-sm-center gap-4">
+                                    <!-- Time -->
+                                    <div class="flex-shrink-0" style="width: 80px;">
+                                        {% if ta.scheduled_time %}
+                                        <span class="badge bg-primary text-dark font-mono px-3 py-2 rounded-3 fs-6">{{ ta.scheduled_time|time:"H:i" }}</span>
+                                        {% else %}
+                                        <span class="font-mono small text-secondary text-uppercase fw-bold opacity-50" style="letter-spacing: 0.1em;">Anytime</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Activity Details -->
+                                    <div class="flex-grow-1 min-w-0">
+                                        <h5 class="fw-medium text-body text-truncate mb-2">{{ ta.activity.name }}</h5>
+                                        <div class="d-flex flex-wrap align-items-center gap-2">
+                                            <span class="badge bg-secondary bg-opacity-10 text-body border text-uppercase" style="letter-spacing: 0.05em; font-size: 0.7rem;">{{ ta.activity.get_category_display }}</span>
+                                            <span class="font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.1em; font-size: 0.75rem;"><i class="bi bi-clock-history me-1"></i> {{ ta.activity.duration_hours }}h duration</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Cost -->
+                                    <div class="flex-shrink-0 text-sm-end text-success">
+                                        <p class="font-mono fs-4 fw-medium mb-0">${{ ta.activity.estimated_cost|floatformat:0 }}</p>
+                                        <p class="font-body small text-uppercase opacity-75 mb-0 fw-bold" style="letter-spacing: 0.1em; font-size: 0.7rem;">Est. Cost</p>
+                                    </div>
+                                </div>
                             </div>
+                            {% empty %}
+                            <div class="text-center py-4 border border-dashed rounded-4 bg-body">
+                                <p class="text-secondary mb-3">No activities scheduled for this destination.</p>
+                                <a href="{% url 'itinerary_builder' trip.pk %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">Add Activities</a>
+                            </div>
+                            {% endfor %}
                         </div>
-                        
-                        <!-- Cost -->
-                        <div class="text-right flex-shrink-0">
-                            <p class="font-mono text-lg text-[var(--text-primary)]">${{ ta.activity.estimated_cost|floatformat:0 }}</p>
-                            <p class="font-body text-[9px] uppercase tracking-widest text-[var(--text-muted)]">Est. Cost</p>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="border border-dashed border-[var(--ink-border)] rounded-[var(--radius-lg)] p-8 text-center bg-[rgba(255,255,255,0.01)]">
-                        <p class="text-sm text-[var(--text-muted)] mb-4">No activities scheduled for this destination.</p>
-                        <a href="{% url 'itinerary_builder' trip.pk %}" class="btn-ghost !py-1.5 !text-[10px]">Add Activities</a>
                     </div>
                     {% endfor %}
                 </div>
+                {% else %}
+                <div class="text-center py-5 bg-body-tertiary rounded-4 border-0 shadow-sm">
+                    <i class="bi bi-map display-1 text-secondary opacity-25 mb-4 d-block"></i>
+                    <h3 class="font-display fs-3 fw-light mb-3">Your itinerary is empty.</h3>
+                    <a href="{% url 'itinerary_builder' trip.pk %}" class="btn btn-primary rounded-pill px-4 py-2">Build Itinerary</a>
+                </div>
+                {% endif %}
             </div>
-            {% endfor %}
         </div>
-        {% else %}
-        <div class="empty-state py-20 border-none">
-            <h3 class="font-display text-3xl font-light text-[var(--text-primary)] mb-4">Your itinerary is empty.</h3>
-            <a href="{% url 'itinerary_builder' trip.pk %}" class="btn-primary">Build Itinerary</a>
-        </div>
-        {% endif %}
     </div>
 
     <!-- LIST VIEW -->
     <div x-show="viewMode === 'list'" x-transition.opacity.duration.400ms style="display:none;">
-        <div class="space-y-8">
+        <div class="d-flex flex-column gap-5">
             {% for stop in stops %}
-            <div class="card p-0 overflow-hidden border border-[var(--ink-border)]">
-                <div class="p-6 bg-black/5 dark:bg-white/5 border-b border-[var(--ink-border)] flex items-center justify-between">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-header bg-body-tertiary border-bottom p-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                     <div>
-                        <h3 class="font-display text-2xl text-[var(--text-primary)]">{{ stop.city.name }}, {{ stop.city.country }}</h3>
-                        <p class="font-mono text-[10px] text-[var(--text-muted)] mt-1">{{ stop.arrival_date|date:"M d" }} — {{ stop.departure_date|date:"M d" }}</p>
+                        <h3 class="font-display fs-4 text-body mb-1">{{ stop.city.name }}, {{ stop.city.country }}</h3>
+                        <p class="font-mono small text-secondary mb-0">{{ stop.arrival_date|date:"M d" }} — {{ stop.departure_date|date:"M d" }}</p>
                     </div>
-                    <span class="badge badge-teal">{{ stop.duration_days }} Days</span>
+                    <span class="badge bg-primary text-dark rounded-pill px-3 py-2 fs-6 shadow-sm">{{ stop.duration_days }} Days</span>
                 </div>
                 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-[var(--ink-border)]">
-                                <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium">Activity</th>
-                                <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium">Category</th>
-                                <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium">Time</th>
-                                <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium text-right">Duration</th>
-                                <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium text-right">Cost</th>
+                <div class="table-responsive">
+                    <table class="table table-hover table-borderless mb-0 align-middle">
+                        <thead class="bg-body-secondary border-bottom">
+                            <tr>
+                                <th class="py-3 px-4 font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.1em; width: 40%;">Activity</th>
+                                <th class="py-3 px-4 font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.1em;">Category</th>
+                                <th class="py-3 px-4 font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.1em;">Time</th>
+                                <th class="py-3 px-4 font-body small text-uppercase text-secondary fw-bold text-end" style="letter-spacing: 0.1em;">Duration</th>
+                                <th class="py-3 px-4 font-body small text-uppercase text-secondary fw-bold text-end" style="letter-spacing: 0.1em;">Cost</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-[var(--ink-border)]">
+                        <tbody>
                             {% for ta in stop.trip_activities.all %}
-                            <tr class="hover:bg-[rgba(255,255,255,0.01)] transition-colors group">
-                                <td class="py-4 px-6 font-medium text-[var(--text-primary)]">{{ ta.activity.name }}</td>
-                                <td class="py-4 px-6">
-                                    <span class="badge badge-ghost text-[9px]">{{ ta.activity.get_category_display }}</span>
+                            <tr>
+                                <td class="py-3 px-4 fw-medium text-body">{{ ta.activity.name }}</td>
+                                <td class="py-3 px-4">
+                                    <span class="badge bg-secondary bg-opacity-10 text-body border text-uppercase" style="letter-spacing: 0.05em; font-size: 0.7rem;">{{ ta.activity.get_category_display }}</span>
                                 </td>
-                                <td class="py-4 px-6 font-mono text-[10px] text-[var(--text-muted)]">
+                                <td class="py-3 px-4 font-mono small text-secondary">
                                     {{ ta.scheduled_time|time:"H:i"|default:"—" }}
                                 </td>
-                                <td class="py-4 px-6 font-mono text-[10px] text-[var(--text-primary)] text-right">{{ ta.activity.duration_hours }}h</td>
-                                <td class="py-4 px-6 font-mono text-[10px] text-[var(--text-primary)] text-right group-hover:text-gold transition-colors">${{ ta.activity.estimated_cost|floatformat:0 }}</td>
+                                <td class="py-3 px-4 font-mono small text-body text-end">{{ ta.activity.duration_hours }}h</td>
+                                <td class="py-3 px-4 font-mono small text-success fw-bold text-end">${{ ta.activity.estimated_cost|floatformat:0 }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="py-8 px-6 text-center text-sm text-[var(--text-muted)] italic">No activities planned for this stop.</td>
+                                <td colspan="5" class="py-4 px-4 text-center text-secondary fst-italic">No activities planned for this stop.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         {% if stop.trip_activities.all %}
-                        <tfoot class="bg-[rgba(255,255,255,0.01)] border-t border-[var(--ink-border)]">
+                        <tfoot class="bg-body-tertiary border-top">
                             <tr>
-                                <td colspan="4" class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] text-right">Destination Total</td>
-                                <td class="py-4 px-6 font-mono text-base text-gold text-right">
+                                <td colspan="4" class="py-3 px-4 font-body small text-uppercase text-secondary fw-bold text-end" style="letter-spacing: 0.1em;">Destination Total</td>
+                                <td class="py-3 px-4 font-mono fs-5 text-success fw-bold text-end">
                                     ${{ stop.total_activity_cost|default:"0" }}
-                                    <!-- In views this might not be calculated automatically, but we can display just visually or use Alpine if we had to -->
                                 </td>
                             </tr>
                         </tfoot>

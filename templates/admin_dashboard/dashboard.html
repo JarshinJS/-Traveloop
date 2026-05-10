@@ -3,110 +3,131 @@
 
 {% block title %}Analytics — Traveloop{% endblock %}
 
+{% block breadcrumb %}
+  <a href="{% url 'dashboard' %}" style="color:var(--text-muted);">Home</a>
+  <span>/</span>
+  <span>Analytics</span>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-8 pb-12">
+<div style="padding: 0;">
+
+  <!-- Page Header -->
+  <div class="tl-page-header">
+    <div>
+      <h1 class="tl-page-title">Analytics</h1>
+      <p class="tl-page-subtitle">Manage your analytics</p>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <!-- Action buttons here -->
+    </div>
+  </div>
+
+  <!-- Page Body -->
+
+<div class="d-flex flex-column gap-4 pb-12">
     
     <!-- HEADER -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--ink-border)] pb-6">
+    <div class="d-flex d-flex-column md:d-flex-row md:align-items-end justify-content-between gap-4 border-b border-[var(--ink-border)] pb-6">
         <div>
-            <h1 class="font-display text-4xl md:text-5xl font-light text-[var(--text-primary)] mb-2">Platform Analytics</h1>
-            <p class="font-body text-xs uppercase tracking-widest text-[var(--text-muted)]">Global system overview</p>
+            <h1 class="tl-page-title">Platform Analytics</h1>
+            <p class="font-body small uppercase tracking-widest text-[var(--text-muted)]">Global system overview</p>
         </div>
-        <div class="flex items-center gap-3">
-            <span class="badge badge-teal backdrop-blur-md px-4 py-2">Live Status: Operational</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge badge-teal backdrop-blur-md px-3 py-2">Live Status: Operational</span>
         </div>
     </div>
 
     <!-- KPI CARDS -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="card p-6 border-[var(--ink-border)] flex flex-col justify-between">
-            <div class="mb-4">
-                <span class="text-2xl">👥</span>
+    <div class="row row-cols-2 md:row-cols-4 gap-3">
+        <div class="card p-4 border-[var(--ink-border)] d-flex d-flex-column justify-content-between">
+            <div class="mb-3">
+                <span class="fs-4">👥</span>
             </div>
             <div>
-                <p class="font-mono text-4xl font-light text-[var(--text-primary)]" data-counter="{{ total_users }}">0</p>
+                <p class="font-mono fs-2 fw-light text-[var(--text-primary)]" data-counter="{{ total_users }}">0</p>
                 <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Total Explorers</p>
             </div>
         </div>
         
-        <div class="card p-6 border-teal bg-[rgba(14,207,177,0.02)] flex flex-col justify-between">
-            <div class="mb-4">
-                <span class="text-2xl">🗺️</span>
+        <div class="card p-4 border-teal bg-[rgba(14,207,177,0.02)] d-flex d-flex-column justify-content-between">
+            <div class="mb-3">
+                <span class="fs-4">🗺️</span>
             </div>
             <div>
-                <p class="font-mono text-4xl font-light text-teal" data-counter="{{ total_trips }}">0</p>
-                <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Journeys Created</p>
+                <p class="font-mono fs-2 fw-light text-teal" data-counter="{{ trips_this_month }}">0</p>
+                <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Trips This Month</p>
             </div>
         </div>
         
-        <div class="card p-6 border-gold bg-[rgba(232,168,56,0.02)] flex flex-col justify-between">
-            <div class="mb-4">
-                <span class="text-2xl">🌍</span>
+        <div class="card p-4 border-gold bg-[rgba(232,168,56,0.02)] d-flex d-flex-column justify-content-between">
+            <div class="mb-3">
+                <span class="fs-4">🌍</span>
             </div>
             <div>
-                <p class="font-mono text-4xl font-light text-gold" data-counter="{{ public_trips }}">0</p>
-                <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Public Itineraries</p>
+                <p class="font-mono fs-2 fw-light text-gold" data-counter="{{ packed_items }}">0</p>
+                <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Packed Items</p>
             </div>
         </div>
         
-        <div class="card p-6 border-[var(--ink-border)] flex flex-col justify-between">
-            <div class="mb-4">
-                <span class="text-2xl">🏙️</span>
+        <div class="card p-4 border-[var(--ink-border)] d-flex d-flex-column justify-content-between">
+            <div class="mb-3">
+                <span class="fs-4">🏙️</span>
             </div>
             <div>
-                <p class="font-mono text-4xl font-light text-[var(--text-primary)]" data-counter="{{ total_cities }}">0</p>
-                <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Cities Indexed</p>
+                <p class="font-mono fs-2 fw-light text-[var(--text-primary)]" data-counter="{{ total_budget_logged|floatformat:0 }}">0</p>
+                <p class="font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] mt-1">Budget Logged</p>
             </div>
         </div>
     </div>
 
     <!-- CHARTS -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="card p-6 flex flex-col h-[400px]">
-            <h3 class="font-display text-2xl font-light text-[var(--text-primary)] mb-6">Growth Trajectory</h3>
-            <div class="flex-1 relative w-full h-full">
+    <div class="row row-cols-1 lg:row-cols-2 g-3">
+        <div class="card p-4 d-flex d-flex-column h-[400px]">
+            <h3 class="font-display fs-4 fw-light text-[var(--text-primary)] mb-4">Growth Trajectory</h3>
+            <div class="d-flex-1 position-relative w-100 h-100">
                 <canvas id="tripsChart"></canvas>
             </div>
         </div>
         
-        <div class="card p-6 flex flex-col h-[400px]">
-            <h3 class="font-display text-2xl font-light text-[var(--text-primary)] mb-6">Top Destinations</h3>
-            <div class="flex-1 relative w-full h-full">
+        <div class="card p-4 d-flex d-flex-column h-[400px]">
+            <h3 class="font-display fs-4 fw-light text-[var(--text-primary)] mb-4">Top Destinations</h3>
+            <div class="d-flex-1 position-relative w-100 h-100">
                 <canvas id="citiesChart"></canvas>
             </div>
         </div>
     </div>
 
     <!-- TABLES -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="row row-cols-1 lg:row-cols-2 g-3">
         
         <!-- Recent Users -->
-        <div class="card p-0 overflow-hidden border border-[var(--ink-border)]">
-            <div class="p-6 bg-black/5 dark:bg-white/5 border-b border-[var(--ink-border)]">
-                <h3 class="font-display text-2xl font-light text-[var(--text-primary)]">Recent Signups</h3>
+        <div class="card p-0 overflow-d-none border border-[var(--ink-border)]">
+            <div class="p-4 bg-black/5 dark:bg-body/5 border-b border-[var(--ink-border)]">
+                <h3 class="font-display fs-4 fw-light text-[var(--text-primary)]">Recent Signups</h3>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-100 text-start border-collapse">
                     <thead>
                         <tr class="border-b border-[var(--ink-border)] bg-[rgba(255,255,255,0.01)]">
-                            <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium">Explorer</th>
-                            <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium text-center">Journeys</th>
-                            <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium text-right">Joined</th>
+                            <th class="py-3 px-4 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] fw-medium">Explorer</th>
+                            <th class="py-3 px-4 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] fw-medium text-center">Journeys</th>
+                            <th class="py-3 px-4 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] fw-medium text-end">Joined</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[var(--ink-border)]">
                         {% for u in recent_users %}
-                        <tr class="hover:bg-black/5 dark:bg-white/5 transition-colors">
-                            <td class="py-4 px-6">
-                                <p class="font-medium text-[var(--text-primary)]">{{ u.username }}</p>
+                        <tr class="hover:bg-black/5 dark:bg-body/5 transition-colors">
+                            <td class="py-3 px-4">
+                                <p class="fw-medium text-[var(--text-primary)]">{{ u.username }}</p>
                                 <p class="text-[10px] text-[var(--text-muted)]">{{ u.email }}</p>
                             </td>
-                            <td class="py-4 px-6 font-mono text-sm text-teal text-center">{{ u.trip_count }}</td>
-                            <td class="py-4 px-6 font-mono text-[10px] text-[var(--text-muted)] text-right">{{ u.date_joined|date:"M d, Y" }}</td>
+                            <td class="py-3 px-4 font-mono fs-6 text-teal text-center">{{ u.trip_count }}</td>
+                            <td class="py-3 px-4 font-mono text-[10px] text-[var(--text-muted)] text-end">{{ u.date_joined|date:"M d, Y" }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="3" class="py-8 px-6 text-center text-sm text-[var(--text-muted)]">No recent users.</td>
+                            <td colspan="3" class="py-4 px-4 text-center fs-6 text-[var(--text-muted)]">No recent users.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -115,30 +136,30 @@
         </div>
 
         <!-- Top Activities -->
-        <div class="card p-0 overflow-hidden border border-[var(--ink-border)]">
-            <div class="p-6 bg-black/5 dark:bg-white/5 border-b border-[var(--ink-border)]">
-                <h3 class="font-display text-2xl font-light text-[var(--text-primary)]">Trending Experiences</h3>
+        <div class="card p-0 overflow-d-none border border-[var(--ink-border)]">
+            <div class="p-4 bg-black/5 dark:bg-body/5 border-b border-[var(--ink-border)]">
+                <h3 class="font-display fs-4 fw-light text-[var(--text-primary)]">Trending Experiences</h3>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-100 text-start border-collapse">
                     <thead>
                         <tr class="border-b border-[var(--ink-border)] bg-[rgba(255,255,255,0.01)]">
-                            <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium">Experience</th>
-                            <th class="py-4 px-6 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium text-right">Global Usage</th>
+                            <th class="py-3 px-4 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] fw-medium">Experience</th>
+                            <th class="py-3 px-4 font-body text-[10px] uppercase tracking-widest text-[var(--text-muted)] fw-medium text-end">Global Usage</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[var(--ink-border)]">
                         {% for a in top_activities %}
-                        <tr class="hover:bg-black/5 dark:bg-white/5 transition-colors">
-                            <td class="py-4 px-6">
-                                <p class="font-medium text-[var(--text-primary)]">{{ a.name }}</p>
+                        <tr class="hover:bg-black/5 dark:bg-body/5 transition-colors">
+                            <td class="py-3 px-4">
+                                <p class="fw-medium text-[var(--text-primary)]">{{ a.name }}</p>
                                 <p class="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">{{ a.city.name }}</p>
                             </td>
-                            <td class="py-4 px-6 font-mono text-sm text-gold text-right">{{ a.usage_count }}</td>
+                            <td class="py-3 px-4 font-mono fs-6 text-gold text-end">{{ a.usage_count }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="2" class="py-8 px-6 text-center text-sm text-[var(--text-muted)]">No trending activities.</td>
+                            <td colspan="2" class="py-4 px-4 text-center fs-6 text-[var(--text-muted)]">No trending activities.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -261,4 +282,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+</div>
 {% endblock %}

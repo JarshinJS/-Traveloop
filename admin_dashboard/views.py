@@ -2,12 +2,13 @@ import json
 from django.shortcuts import render
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from datetime import timedelta
 
-from trips.models import Trip
+from budget.models import BudgetEntry
+from trips.models import PackingItem, Trip
 from cities.models import City
 from activities.models import Activity
 
@@ -18,11 +19,16 @@ def analytics_dashboard_view(request):
     total_trips = Trip.objects.count()
     public_trips = Trip.objects.filter(is_public=True).count()
     total_cities = City.objects.count()
+    month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    trips_this_month = Trip.objects.filter(created_at__gte=month_start).count()
+    packed_items = PackingItem.objects.filter(is_packed=True).count()
+    total_packing_items = PackingItem.objects.count()
+    total_budget_logged = BudgetEntry.objects.aggregate(total=Sum('amount'))['total'] or 0
 
     # Top cities by trip stops
     top_cities = City.objects.annotate(
         stop_count=Count('tripstop')
-    ).order_by('-stop_count')[:10]
+    ).order_by('-stop_count')[:5]
 
     # Top activities by usage
     top_activities = Activity.objects.annotate(
@@ -56,6 +62,10 @@ def analytics_dashboard_view(request):
         'total_trips': total_trips,
         'public_trips': public_trips,
         'total_cities': total_cities,
+        'trips_this_month': trips_this_month,
+        'packed_items': packed_items,
+        'total_packing_items': total_packing_items,
+        'total_budget_logged': total_budget_logged,
         'top_cities': top_cities,
         'top_activities': top_activities,
         'recent_users': recent_users,

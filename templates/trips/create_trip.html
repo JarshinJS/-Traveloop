@@ -3,8 +3,14 @@
 
 {% block title %}{% if edit_mode %}Edit Trip{% else %}Create Trip{% endif %} — Traveloop{% endblock %}
 
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-body-secondary">Home</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'trip_list' %}" class="text-decoration-none text-body-secondary">My Journeys</a></li>
+  <li class="breadcrumb-item active" aria-current="page">{% if edit_mode %}Edit Trip{% else %}Create Trip{% endif %}</li>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-6xl mx-auto pb-12" x-data="{
+<div class="container-fluid pb-5 px-0" x-data="{
     step: 1,
     name: '{{ form.instance.name|escapejs|default:"" }}',
     startDate: '{{ form.instance.start_date|date:"Y-m-d"|default:"" }}',
@@ -35,193 +41,202 @@
 }">
 
     <!-- HEADER -->
-    <div class="mb-12 text-center">
-        <h1 class="font-display text-4xl font-light mb-2">
+    <div class="text-center mb-5">
+        <h1 class="font-display display-5 fw-medium mb-1">
             {% if edit_mode %}Edit Journey{% else %}Plan New Journey{% endif %}
         </h1>
-        <p class="font-body text-xs uppercase tracking-widest text-[var(--text-muted)]">Define the parameters of your next adventure</p>
+        <p class="font-body small text-uppercase text-secondary mb-0" style="letter-spacing: 0.1em;">Define the parameters of your next adventure</p>
     </div>
 
     <!-- MAIN GRID -->
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
+    <div class="row g-5">
         
         <!-- FORM PANEL -->
-        <div class="lg:col-span-3">
+        <div class="col-lg-7">
             
             <!-- Stepper -->
-            <div class="flex items-center justify-between mb-8 relative">
-                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-px bg-[var(--ink-border)] z-0"></div>
-                <!-- Step 1 -->
-                <div class="relative z-10 flex flex-col items-center gap-2 cursor-pointer transition-all" @click="step = 1">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-mono text-xs transition-colors"
-                         :class="step >= 1 ? 'bg-[var(--gold)] text-[var(--ink)]' : 'bg-[var(--ink-card)] text-[var(--text-muted)] border border-[var(--ink-border)]'">1</div>
-                    <span class="font-body text-[10px] uppercase tracking-wider hidden sm:block" :class="step >= 1 ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'">Name</span>
-                </div>
-                <!-- Step 2 -->
-                <div class="relative z-10 flex flex-col items-center gap-2 cursor-pointer transition-all" @click="step = 2">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-mono text-xs transition-colors"
-                         :class="step >= 2 ? 'bg-[var(--gold)] text-[var(--ink)]' : 'bg-[var(--ink-card)] text-[var(--text-muted)] border border-[var(--ink-border)]'">2</div>
-                    <span class="font-body text-[10px] uppercase tracking-wider hidden sm:block" :class="step >= 2 ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'">Dates</span>
-                </div>
-                <!-- Step 3 -->
-                <div class="relative z-10 flex flex-col items-center gap-2 cursor-pointer transition-all" @click="step = 3">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-mono text-xs transition-colors"
-                         :class="step >= 3 ? 'bg-[var(--gold)] text-[var(--ink)]' : 'bg-[var(--ink-card)] text-[var(--text-muted)] border border-[var(--ink-border)]'">3</div>
-                    <span class="font-body text-[10px] uppercase tracking-wider hidden sm:block" :class="step >= 3 ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'">Details</span>
-                </div>
-                <!-- Step 4 -->
-                <div class="relative z-10 flex flex-col items-center gap-2 cursor-pointer transition-all" @click="step = 4">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center font-mono text-xs transition-colors"
-                         :class="step >= 4 ? 'bg-[var(--gold)] text-[var(--ink)]' : 'bg-[var(--ink-card)] text-[var(--text-muted)] border border-[var(--ink-border)]'">4</div>
-                    <span class="font-body text-[10px] uppercase tracking-wider hidden sm:block" :class="step >= 4 ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'">Media</span>
+            <div class="position-relative mb-5">
+                <div class="position-absolute top-50 start-0 w-100 border-top" style="z-index: 0;"></div>
+                
+                <div class="d-flex justify-content-between position-relative z-1 px-3 px-sm-5">
+                    <!-- Step 1 -->
+                    <div class="d-flex flex-column align-items-center gap-2" style="cursor: pointer;" @click="step = 1">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center font-mono small border transition-all"
+                             style="width: 36px; height: 36px;"
+                             :class="step >= 1 ? 'bg-primary border-primary text-dark fw-bold' : 'bg-body-tertiary text-secondary'">1</div>
+                        <span class="font-body small text-uppercase d-none d-sm-block" style="letter-spacing: 0.05em; font-size: 0.7rem;" :class="step >= 1 ? 'text-body fw-bold' : 'text-secondary'">Name</span>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="d-flex flex-column align-items-center gap-2" style="cursor: pointer;" @click="step = 2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center font-mono small border transition-all"
+                             style="width: 36px; height: 36px;"
+                             :class="step >= 2 ? 'bg-primary border-primary text-dark fw-bold' : 'bg-body-tertiary text-secondary'">2</div>
+                        <span class="font-body small text-uppercase d-none d-sm-block" style="letter-spacing: 0.05em; font-size: 0.7rem;" :class="step >= 2 ? 'text-body fw-bold' : 'text-secondary'">Dates</span>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="d-flex flex-column align-items-center gap-2" style="cursor: pointer;" @click="step = 3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center font-mono small border transition-all"
+                             style="width: 36px; height: 36px;"
+                             :class="step >= 3 ? 'bg-primary border-primary text-dark fw-bold' : 'bg-body-tertiary text-secondary'">3</div>
+                        <span class="font-body small text-uppercase d-none d-sm-block" style="letter-spacing: 0.05em; font-size: 0.7rem;" :class="step >= 3 ? 'text-body fw-bold' : 'text-secondary'">Details</span>
+                    </div>
+                    <!-- Step 4 -->
+                    <div class="d-flex flex-column align-items-center gap-2" style="cursor: pointer;" @click="step = 4">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center font-mono small border transition-all"
+                             style="width: 36px; height: 36px;"
+                             :class="step >= 4 ? 'bg-primary border-primary text-dark fw-bold' : 'bg-body-tertiary text-secondary'">4</div>
+                        <span class="font-body small text-uppercase d-none d-sm-block" style="letter-spacing: 0.05em; font-size: 0.7rem;" :class="step >= 4 ? 'text-body fw-bold' : 'text-secondary'">Media</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Form Form -->
-            <form method="post" enctype="multipart/form-data" id="trip-form" class="card p-8 min-h-[400px] flex flex-col">
+            <!-- Form -->
+            <form method="post" enctype="multipart/form-data" id="trip-form" class="card border-0 shadow-sm p-4 p-md-5 bg-body-tertiary" style="min-height: 450px;">
                 {% csrf_token %}
                 
-                <div class="flex-1">
+                <div class="flex-grow-1">
                     <!-- STEP 1 -->
                     <div x-show="step === 1" x-transition.opacity.duration.300ms>
-                        <h3 class="font-display text-2xl font-medium mb-6">What shall we call this trip?</h3>
-                        <div class="form-group">
-                            <input type="text" name="name" x-model="name" class="input-field !text-xl !py-4" placeholder=" " required>
-                            <label class="form-label-floating">Trip Name *</label>
-                            {% if form.name.errors %}<p class="text-xs text-red-500 mt-1">{{ form.name.errors.0 }}</p>{% endif %}
+                        <h3 class="font-display fs-3 fw-medium mb-4">What shall we call this trip?</h3>
+                        <div class="form-floating mb-3">
+                            <input type="text" name="name" x-model="name" class="form-control form-control-lg fs-4" placeholder=" " required>
+                            <label>Trip Name *</label>
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
                         </div>
                     </div>
 
                     <!-- STEP 2 -->
                     <div x-show="step === 2" x-transition.opacity.duration.300ms style="display: none;">
-                        <h3 class="font-display text-2xl font-medium mb-6">When are you going?</h3>
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="form-group">
-                                <label class="form-label text-[10px]">Start Date *</label>
-                                <input type="date" name="start_date" x-model="startDate" class="input-field" required>
-                                {% if form.start_date.errors %}<p class="text-xs text-red-500 mt-1">{{ form.start_date.errors.0 }}</p>{% endif %}
+                        <h3 class="font-display fs-3 fw-medium mb-4">When are you going?</h3>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-floating">
+                                    <input type="date" name="start_date" x-model="startDate" class="form-control" placeholder=" " required>
+                                    <label>Start Date *</label>
+                                </div>
+                                {% if form.start_date.errors %}<div class="text-danger small mt-1">{{ form.start_date.errors.0 }}</div>{% endif %}
                             </div>
-                            <div class="form-group">
-                                <label class="form-label text-[10px]">End Date *</label>
-                                <input type="date" name="end_date" x-model="endDate" class="input-field" required>
-                                {% if form.end_date.errors %}<p class="text-xs text-red-500 mt-1">{{ form.end_date.errors.0 }}</p>{% endif %}
+                            <div class="col-sm-6">
+                                <div class="form-floating">
+                                    <input type="date" name="end_date" x-model="endDate" class="form-control" placeholder=" " required>
+                                    <label>End Date *</label>
+                                </div>
+                                {% if form.end_date.errors %}<div class="text-danger small mt-1">{{ form.end_date.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
                     </div>
 
                     <!-- STEP 3 -->
                     <div x-show="step === 3" x-transition.opacity.duration.300ms style="display: none;">
-                        <h3 class="font-display text-2xl font-medium mb-6">Tell us more</h3>
+                        <h3 class="font-display fs-3 fw-medium mb-4">Tell us more</h3>
                         
-                        <div class="form-group mb-6">
-                            <textarea name="description" class="input-field !h-32 resize-none" placeholder="Add some notes about your trip goals...">{{ form.instance.description }}</textarea>
-                            {% if form.description.errors %}<p class="text-xs text-red-500 mt-1">{{ form.description.errors.0 }}</p>{% endif %}
+                        <div class="form-floating mb-4">
+                            <textarea name="description" class="form-control" placeholder=" " style="height: 120px; resize: none;">{{ form.instance.description }}</textarea>
+                            <label>Description (optional)</label>
+                            {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
                         </div>
 
-                        <div class="form-group relative">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-mono">$</span>
-                            <input type="number" name="total_budget" x-model="budget" class="input-field !pl-8" placeholder=" " step="0.01">
-                            <label class="form-label-floating !left-[28px]">Total Budget</label>
-                            {% if form.total_budget.errors %}<p class="text-xs text-red-500 mt-1">{{ form.total_budget.errors.0 }}</p>{% endif %}
+                        <div class="form-floating mb-3">
+                            <input type="number" name="total_budget" x-model="budget" class="form-control" placeholder=" " step="0.01">
+                            <label>Total Budget (USD) (optional)</label>
+                            {% if form.total_budget.errors %}<div class="text-danger small mt-1">{{ form.total_budget.errors.0 }}</div>{% endif %}
                         </div>
                     </div>
 
                     <!-- STEP 4 -->
                     <div x-show="step === 4" x-transition.opacity.duration.300ms style="display: none;">
-                        <h3 class="font-display text-2xl font-medium mb-6">Make it yours</h3>
+                        <h3 class="font-display fs-3 fw-medium mb-4">Make it yours</h3>
                         
                         <!-- File Upload -->
-                        <div class="mb-8">
-                            <label class="form-label text-[10px] mb-2 block">Cover Photo</label>
-                            <div class="relative border-2 border-dashed border-[var(--ink-border)] rounded-[var(--radius-lg)] p-8 text-center hover:border-gold hover:bg-[rgba(232,168,56,0.02)] transition-colors cursor-pointer"
+                        <div class="mb-4">
+                            <label class="form-label small text-secondary text-uppercase fw-bold" style="letter-spacing: 0.05em;">Cover Photo</label>
+                            <div class="border border-2 border-secondary-subtle rounded-4 p-5 text-center bg-body transition-all"
+                                 style="border-style: dashed !important; cursor: pointer;"
+                                 onmouseover="this.classList.add('border-primary'); this.style.backgroundColor='rgba(var(--bs-primary-rgb), 0.05)';"
+                                 onmouseout="this.classList.remove('border-primary'); this.style.backgroundColor='var(--bs-body-bg)';"
                                  onclick="document.getElementById('cover_input').click()">
-                                <input type="file" id="cover_input" name="cover_photo" accept="image/*" class="hidden"
+                                <input type="file" id="cover_input" name="cover_photo" accept="image/*" class="d-none"
                                        @change="if($event.target.files.length) { coverPreview = URL.createObjectURL($event.target.files[0]) }">
-                                <span class="text-3xl mb-2 block text-[var(--text-ghost)]">📸</span>
-                                <p class="text-sm text-[var(--text-primary)] font-medium">Click to upload image</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-1">JPEG, PNG, WEBP</p>
+                                <i class="bi bi-camera display-4 text-secondary mb-2 opacity-50 d-block"></i>
+                                <p class="fs-5 text-body fw-medium mb-1">Click to upload image</p>
+                                <p class="small text-secondary mb-0">JPEG, PNG, WEBP</p>
                             </div>
                         </div>
 
                         <!-- Public Toggle -->
-                        <div class="flex items-center justify-between p-4 rounded-[var(--radius-md)] bg-black/5 dark:bg-white/5 border border-[var(--ink-border)]">
+                        <div class="d-flex align-items-center justify-content-between p-4 rounded-4 border bg-body">
                             <div>
-                                <p class="font-medium text-sm text-[var(--text-primary)]">Make trip public</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-1">Allow others to view and clone this itinerary via link.</p>
+                                <p class="fw-medium fs-5 mb-0">Make trip public</p>
+                                <p class="small text-secondary mb-0">Allow others to view this itinerary.</p>
                             </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_public" class="sr-only peer" x-model="isPublic">
-                                <div class="w-11 h-6 bg-[var(--ink)]-soft peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-primary after:border-[var(--ink-border)] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold border border-[var(--ink-border)]"></div>
-                            </label>
+                            <div class="form-check form-switch fs-3">
+                                <input class="form-check-input" type="checkbox" name="is_public" role="switch" x-model="isPublic">
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Navigation Buttons -->
-                <div class="mt-8 flex justify-between border-t border-[var(--ink-border)] pt-6">
-                    <button type="button" class="btn-ghost" x-show="step > 1" @click="step--">
-                        &larr; Back
+                <div class="mt-5 d-flex justify-content-between border-top pt-4">
+                    <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" x-show="step > 1" @click="step--">
+                        <i class="bi bi-arrow-left me-1"></i> Back
                     </button>
-                    <div x-show="step === 1" class="w-1"></div> <!-- Spacer to keep Next on right -->
+                    <div x-show="step === 1" style="width: 1px;"></div> <!-- Spacer -->
                     
-                    <button type="button" class="btn-primary" x-show="step < 4" @click="if(name) { step++ } else { alert('Please enter a trip name') }">
-                        Next &rarr;
+                    <button type="button" class="btn btn-primary px-4 rounded-pill" x-show="step < 4" @click="if(name) { step++ } else { alert('Please enter a trip name') }">
+                        Next <i class="bi bi-arrow-right ms-1"></i>
                     </button>
                     
-                    <button type="submit" class="btn-primary" x-show="step === 4" x-data="{ loading: false }" @click="loading = true">
-                        <span x-show="!loading">{% if edit_mode %}Update Journey{% else %}Save Journey{% endif %} &rarr;</span>
-                        <span x-show="loading" class="animate-spin inline-block w-4 h-4 border-2 border-[var(--ink)] border-t-transparent rounded-full"></span>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill" x-show="step === 4" x-data="{ loading: false }" @click="loading = true">
+                        <span x-show="!loading">{% if edit_mode %}Update Journey{% else %}Save Journey{% endif %} <i class="bi bi-check2 ms-1"></i></span>
+                        <span x-show="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     </button>
                 </div>
             </form>
         </div>
 
         <!-- LIVE PREVIEW PANEL -->
-        <div class="lg:col-span-2 hidden lg:block sticky top-24">
-            <p class="font-body text-[10px] uppercase tracking-widest text-gold mb-4 ml-1 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-[var(--gold)] dot-pulse"></span>
+        <div class="col-lg-5 d-none d-lg-block position-sticky" style="top: 100px;">
+            <p class="font-body small text-uppercase text-primary mb-3 d-flex align-items-center gap-2 fw-bold" style="letter-spacing: 0.1em;">
+                <span class="rounded-circle bg-primary" style="width: 8px; height: 8px;"></span>
                 Live Preview
             </p>
             
-            <div class="card overflow-hidden">
-                <div class="relative h-56 overflow-hidden">
+            <div class="card border-0 shadow-sm overflow-hidden text-white" style="background: var(--bs-tertiary-bg);">
+                <div class="position-relative" style="height: 250px;">
                     <template x-if="coverPreview">
-                        <img :src="coverPreview" class="absolute inset-0 w-full h-full object-cover">
+                        <img :src="coverPreview" class="position-absolute w-100 h-100 object-fit-cover" style="transition: opacity 0.3s ease;">
                     </template>
                     <template x-if="!coverPreview">
-                        <div class="absolute inset-0 w-full h-full bg-[var(--ink)]-soft flex items-center justify-center border-b border-[var(--ink-border)]">
-                            <span class="font-display text-5xl opacity-10">✈️</span>
-                            <div class="absolute inset-0 p-6 flex flex-col justify-center items-center text-center opacity-50">
-                                <p class="text-xs text-[var(--text-muted)] font-body uppercase tracking-widest">TIP</p>
-                                <p class="text-sm text-[var(--text-primary)] mt-2">Add a cover photo to make your trip card stand out!</p>
-                            </div>
+                        <div class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center">
+                            <i class="bi bi-image display-1 text-secondary opacity-25"></i>
                         </div>
                     </template>
                     
-                    <div class="absolute inset-0 bg-gradient-to-t from-[var(--ink)] to-transparent opacity-90"></div>
+                    <div class="position-absolute w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
                     
-                    <div class="absolute top-4 right-4 flex gap-2">
-                        <span class="badge badge-teal backdrop-blur-md" x-show="isPublic">Public</span>
-                        <span class="badge badge-ghost backdrop-blur-md" x-show="!isPublic">Private</span>
+                    <div class="position-absolute top-0 end-0 mt-3 me-3 d-flex gap-2 z-1">
+                        <span class="badge bg-info text-dark rounded-pill px-3 py-2 shadow-sm" x-show="isPublic">Public</span>
+                        <span class="badge bg-secondary text-light rounded-pill px-3 py-2 shadow-sm" x-show="!isPublic">Private</span>
                     </div>
                 </div>
 
-                <div class="p-6 relative -mt-6">
-                    <h3 class="font-display text-3xl font-medium text-[var(--text-primary)] mb-2 truncate" x-text="name || 'Untitled Journey'"></h3>
-                    <div class="flex items-center gap-3 font-mono text-xs text-[var(--text-muted)] mb-6">
+                <div class="card-body position-relative p-4" style="margin-top: -60px; z-index: 2;">
+                    <h3 class="font-display fs-3 fw-medium text-white mb-1 text-truncate text-shadow" x-text="name || 'Untitled Journey'"></h3>
+                    <div class="d-flex align-items-center gap-2 font-mono small text-light opacity-75 mb-4 text-shadow">
                         <span x-text="formattedStartDate"></span>
-                        <span class="text-gold">&rarr;</span>
+                        <i class="bi bi-arrow-right text-primary"></i>
                         <span x-text="formattedEndDate"></span>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4 border-t border-[var(--ink-border)] pt-4">
-                        <div>
-                            <p class="text-[10px] font-body uppercase tracking-wider text-[var(--text-muted)] mb-1">Duration</p>
-                            <p class="font-mono text-[var(--text-primary)]"><span x-text="duration"></span> DAYS</p>
+                    <div class="row g-3 border-top border-secondary pt-3 mt-3">
+                        <div class="col-6">
+                            <p class="small text-uppercase text-light opacity-50 mb-1" style="letter-spacing: 0.1em; font-size: 0.7rem;">Duration</p>
+                            <p class="font-mono text-white mb-0 fs-5"><span x-text="duration"></span> DAYS</p>
                         </div>
-                        <div>
-                            <p class="text-[10px] font-body uppercase tracking-wider text-[var(--text-muted)] mb-1">Budget</p>
-                            <p class="font-mono text-[var(--text-primary)]">$<span x-text="budget || '0'"></span></p>
+                        <div class="col-6">
+                            <p class="small text-uppercase text-light opacity-50 mb-1" style="letter-spacing: 0.1em; font-size: 0.7rem;">Budget</p>
+                            <p class="font-mono text-white mb-0 fs-5">$<span x-text="budget || '0'"></span></p>
                         </div>
                     </div>
                 </div>
@@ -230,18 +245,4 @@
 
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea');
-        inputs.forEach(input => {
-            if (!input.classList.contains('input-field')) {
-                input.classList.add('input-field');
-            }
-            if (!input.getAttribute('placeholder')) {
-                input.setAttribute('placeholder', ' ');
-            }
-        });
-    });
-</script>
 {% endblock %}

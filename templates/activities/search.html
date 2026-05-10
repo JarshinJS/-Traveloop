@@ -3,102 +3,111 @@
 
 {% block title %}Experiences — Traveloop{% endblock %}
 
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-body-secondary">Home</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Experiences</li>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-8 pb-12">
+<div class="d-flex flex-column gap-4 pb-5">
     
     <!-- HEADER -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--ink-border)] pb-6">
+    <div class="d-flex flex-column flex-xl-row align-items-xl-end justify-content-between gap-4 border-bottom pb-4">
         <div>
-            <h1 class="font-display text-4xl md:text-5xl font-light text-[var(--text-primary)] mb-2">Experiences</h1>
-            <p class="font-body text-xs uppercase tracking-widest text-[var(--text-muted)]">Curated moments across the globe</p>
+            <h1 class="font-display display-5 fw-medium mb-1">Experiences</h1>
+            <p class="font-body small text-uppercase text-secondary mb-0 fw-bold" style="letter-spacing: 0.1em;">Curated moments across the globe</p>
         </div>
         
-        <form method="get" class="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
-            <div class="relative flex-1 md:w-64">
+        <form method="get" class="d-flex flex-column flex-md-row gap-3 w-100 flex-xl-grow-1 justify-content-xl-end">
+            <div class="position-relative flex-grow-1" style="max-width: 400px;">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
                 <input type="text" name="q" value="{{ query }}" placeholder="Search activities..." 
-                       class="input-field pl-10 !py-3 !rounded-full !bg-black/5 dark:bg-white/5">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">🔍</span>
+                       class="form-control rounded-pill ps-5 bg-body-tertiary border-0 py-2 w-100">
             </div>
             
-            <div class="flex gap-2">
-                <select name="city_id" class="input-field !py-3 !rounded-full !bg-black/5 dark:bg-white/5 sm:w-36" onchange="this.form.submit()">
+            <div class="d-flex flex-wrap flex-sm-nowrap gap-2">
+                <select name="city_id" class="form-select rounded-pill bg-body-tertiary border-0 py-2 w-auto" onchange="this.form.submit()">
                     <option value="">All Cities</option>
                     {% for city in cities %}
                     <option value="{{ city.pk }}" {% if selected_city_id|slugify == city.pk|slugify %}selected{% endif %}>{{ city.name }}</option>
                     {% endfor %}
                 </select>
                 
-                <select name="category" class="input-field !py-3 !rounded-full !bg-black/5 dark:bg-white/5 sm:w-40" onchange="this.form.submit()">
+                <select name="category" class="form-select rounded-pill bg-body-tertiary border-0 py-2 w-auto" onchange="this.form.submit()">
                     <option value="">All Types</option>
                     {% for val, label in categories %}
                     <option value="{{ val }}" {% if selected_category == val %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
                 
-                <input type="number" name="max_cost" value="{{ max_cost }}" placeholder="Max $" 
-                       class="input-field !py-3 !rounded-full !bg-black/5 dark:bg-white/5 w-24">
-                       
-                <button type="submit" class="btn-primary !px-4 !py-3 !rounded-full">
-                    Filter
-                </button>
+                <div class="d-flex gap-2 w-100 w-sm-auto">
+                    <input type="number" name="max_cost" value="{{ max_cost }}" placeholder="Max $" 
+                           class="form-control rounded-pill bg-body-tertiary border-0 py-2" style="width: 100px;">
+                           
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">
+                        Filter
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 
-    <!-- CATEGORY CHIPS (Optional Quick Filters) -->
-    <div class="flex flex-wrap gap-3">
-        <a href="{% url 'activity_search' %}" class="px-4 py-1.5 rounded-full border text-xs font-body uppercase tracking-wider transition-colors
-            {% if not selected_category %}bg-teal/10 border-teal text-teal{% else %}bg-transparent border-[var(--ink-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]{% endif %}">
+    <!-- CATEGORY CHIPS -->
+    <div class="d-flex flex-wrap gap-2 mb-2">
+        <a href="{% url 'activity_search' %}" class="btn rounded-pill btn-sm px-3 py-2 font-body text-uppercase fw-bold {% if not selected_category %}btn-info text-dark{% else %}btn-outline-secondary text-body{% endif %}" style="letter-spacing: 0.05em;">
             All
         </a>
         {% for val, label in categories %}
-        <a href="{% url 'activity_search' %}?category={{ val }}{% if selected_city_id %}&city_id={{ selected_city_id }}{% endif %}" class="px-4 py-1.5 rounded-full border text-xs font-body uppercase tracking-wider transition-colors
-            {% if selected_category == val %}bg-teal/10 border-teal text-teal{% else %}bg-transparent border-[var(--ink-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]{% endif %}">
+        <a href="{% url 'activity_search' %}?category={{ val }}{% if selected_city_id %}&city_id={{ selected_city_id }}{% endif %}" class="btn rounded-pill btn-sm px-3 py-2 font-body text-uppercase fw-bold {% if selected_category == val %}btn-info text-dark{% else %}btn-outline-secondary text-body{% endif %}" style="letter-spacing: 0.05em;">
             {{ label }}
         </a>
         {% endfor %}
     </div>
 
     <!-- ACTIVITIES GRID -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
         {% for activity in activities %}
-        <div class="card p-6 flex flex-col group hover:border-teal transition-colors relative">
-            
-            {% if activity.is_popular %}
-            <div class="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-[var(--gold)] to-[var(--gold-light)] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(232,168,56,0.5)] transform rotate-12 group-hover:rotate-0 transition-transform" title="Popular Experience">
-                <span class="text-sm">🔥</span>
-            </div>
-            {% endif %}
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm bg-body-tertiary p-4 d-flex flex-column transition-all hover-shadow hover-border-info position-relative">
+                
+                {% if activity.is_popular %}
+                <div class="position-absolute top-0 end-0 translate-middle bg-warning rounded-circle d-flex align-items-center justify-content-center shadow-sm z-1" style="width: 40px; height: 40px;" title="Popular Experience">
+                    <span class="fs-5">🔥</span>
+                </div>
+                {% endif %}
 
-            <div class="flex items-start justify-between mb-4">
-                <div>
-                    <h3 class="font-display text-2xl font-medium text-[var(--text-primary)] mb-1 group-hover:text-teal transition-colors pr-6">{{ activity.name }}</h3>
-                    <p class="font-body text-[10px] uppercase tracking-wider text-gold cursor-pointer hover:underline" onclick="location.href='{% url 'city_detail' activity.city.pk %}'">
-                        {{ activity.city.name }}, {{ activity.city.country }}
-                    </p>
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                    <div class="pe-3">
+                        <h3 class="font-display fs-4 fw-medium text-body mb-1">{{ activity.name }}</h3>
+                        <a href="{% url 'city_detail' activity.city.pk %}" class="font-body small text-uppercase text-warning fw-bold text-decoration-none hover-text-warning opacity-75" style="letter-spacing: 0.05em;">
+                            {{ activity.city.name }}, {{ activity.city.country }}
+                        </a>
+                    </div>
+                    <span class="badge bg-secondary bg-opacity-10 text-body border text-uppercase flex-shrink-0" style="letter-spacing: 0.05em; font-size: 0.7rem;">{{ activity.get_category_display }}</span>
                 </div>
-                <span class="badge badge-ghost text-[9px]">{{ activity.get_category_display }}</span>
+                
+                <p class="text-secondary mb-4 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">{{ activity.description }}</p>
+                
+                <div class="d-flex align-items-center justify-content-between border-top pt-4 mt-auto">
+                    <div>
+                        <span class="font-mono fs-4 text-success fw-bold d-block lh-1 mb-1">${{ activity.estimated_cost|floatformat:0 }}</span>
+                        <span class="font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.1em; font-size: 0.7rem;">Est. Cost</span>
+                    </div>
+                    <div class="text-end">
+                        <span class="font-mono fs-4 text-body fw-medium d-block lh-1 mb-1">{{ activity.duration_hours }}h</span>
+                        <span class="font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.1em; font-size: 0.7rem;">Duration</span>
+                    </div>
+                </div>
+                
             </div>
-            
-            <p class="text-sm text-[var(--text-muted)] line-clamp-3 mb-6 flex-1">{{ activity.description }}</p>
-            
-            <div class="flex items-center justify-between border-t border-[var(--ink-border)] pt-4">
-                <div class="flex flex-col">
-                    <span class="font-mono text-xl text-[var(--text-primary)]">${{ activity.estimated_cost|floatformat:0 }}</span>
-                    <span class="font-body text-[9px] uppercase tracking-widest text-[var(--text-muted)]">Est. Cost</span>
-                </div>
-                <div class="flex flex-col text-right">
-                    <span class="font-mono text-xl text-[var(--text-primary)]">{{ activity.duration_hours }}h</span>
-                    <span class="font-body text-[9px] uppercase tracking-widest text-[var(--text-muted)]">Duration</span>
-                </div>
-            </div>
-            
         </div>
         {% empty %}
-        <div class="col-span-full empty-state py-20">
-            <span class="text-6xl opacity-20 mb-6">🎯</span>
-            <h3 class="font-display text-3xl font-light text-[var(--text-primary)] mb-2">No experiences found</h3>
-            <p class="font-body text-xs uppercase tracking-widest text-[var(--text-muted)]">Try broadening your search criteria</p>
+        <div class="col-12">
+            <div class="text-center py-5 bg-body-tertiary rounded-4 border-0 shadow-sm">
+                <i class="bi bi-ticket-detailed display-1 text-secondary opacity-25 mb-4 d-block"></i>
+                <h3 class="font-display fs-3 fw-light mb-2">No experiences found</h3>
+                <p class="font-body small text-uppercase text-secondary fw-bold" style="letter-spacing: 0.1em;">Try broadening your search criteria</p>
+            </div>
         </div>
         {% endfor %}
     </div>

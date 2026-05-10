@@ -41,10 +41,14 @@ class Command(BaseCommand):
 
         created_count = 0
         for city_data in cities_data:
-            _, created = City.objects.get_or_create(
+            defaults = {
+                **city_data,
+                'popularity_rating': city_data['popularity_score'],
+            }
+            _, created = City.objects.update_or_create(
                 name=city_data['name'],
                 country=city_data['country'],
-                defaults=city_data,
+                defaults=defaults,
             )
             if created:
                 created_count += 1

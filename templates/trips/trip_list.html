@@ -3,98 +3,112 @@
 
 {% block title %}My Journeys — Traveloop{% endblock %}
 
+{% block breadcrumb %}
+  <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-body-secondary">Home</a></li>
+  <li class="breadcrumb-item active" aria-current="page">My Journeys</li>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-8" x-data="{ tab: 'all' }">
+<div class="d-flex flex-column gap-4 pb-5" x-data="{ tab: 'all' }">
     
     <!-- HEADER -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[var(--ink-border)] pb-6">
+    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-4 border-bottom pb-4">
         <div>
-            <h1 class="font-display text-5xl font-light text-[var(--text-primary)] mb-2">My Journeys</h1>
-            <p class="font-body text-xs uppercase tracking-widest text-[var(--text-muted)]">{{ trips.count }} trips planned</p>
+            <h1 class="font-display display-5 fw-medium mb-1">My Journeys</h1>
+            <p class="font-body small text-uppercase text-secondary mb-0" style="letter-spacing: 0.1em;">{{ trips.count }} trips planned</p>
         </div>
         
-        <div class="flex items-center gap-4 w-full md:w-auto">
-            <form method="get" class="relative flex-1 md:w-64">
+        <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 w-100" style="max-width: 450px;">
+            <form method="get" class="flex-grow-1 position-relative">
                 <input type="text" name="q" value="{{ query }}" placeholder="Search destinations..." 
-                       class="input-field pl-10 !py-3 !rounded-full !bg-black/5 dark:bg-white/5">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">🔍</span>
+                       class="form-control rounded-pill ps-5 bg-body-tertiary border-0 py-2">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
             </form>
-            <a href="{% url 'trip_create' %}" class="btn-primary !px-6 !py-3 flex-shrink-0">
-                + New Trip
+            <a href="{% url 'trip_create' %}" class="btn btn-primary rounded-pill px-4 py-2 text-nowrap">
+                <i class="bi bi-plus-lg me-1"></i> New Trip
             </a>
         </div>
     </div>
 
     <!-- TABS -->
-    <div class="flex gap-6 border-b border-[var(--ink-border)]">
-        <button @click="tab = 'all'" class="pb-3 text-xs font-body uppercase tracking-widest transition-colors"
-                :class="tab === 'all' ? 'text-gold border-b-2 border-gold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'">All</button>
-        <button @click="tab = 'upcoming'" class="pb-3 text-xs font-body uppercase tracking-widest transition-colors"
-                :class="tab === 'upcoming' ? 'text-gold border-b-2 border-gold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'">Upcoming</button>
-        <button @click="tab = 'past'" class="pb-3 text-xs font-body uppercase tracking-widest transition-colors"
-                :class="tab === 'past' ? 'text-gold border-b-2 border-gold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'">Past</button>
-    </div>
+    <ul class="nav nav-tabs border-bottom mb-3" style="--bs-nav-tabs-border-width: 0;">
+      <li class="nav-item">
+        <button @click="tab = 'all'" class="nav-link border-0 rounded-0 bg-transparent fw-bold text-uppercase pb-3" style="letter-spacing: 0.05em;"
+                :class="tab === 'all' ? 'text-primary border-bottom border-primary border-2' : 'text-secondary'">All</button>
+      </li>
+      <li class="nav-item">
+        <button @click="tab = 'upcoming'" class="nav-link border-0 rounded-0 bg-transparent fw-bold text-uppercase pb-3" style="letter-spacing: 0.05em;"
+                :class="tab === 'upcoming' ? 'text-primary border-bottom border-primary border-2' : 'text-secondary'">Upcoming</button>
+      </li>
+      <li class="nav-item">
+        <button @click="tab = 'past'" class="nav-link border-0 rounded-0 bg-transparent fw-bold text-uppercase pb-3" style="letter-spacing: 0.05em;"
+                :class="tab === 'past' ? 'text-primary border-bottom border-primary border-2' : 'text-secondary'">Past</button>
+      </li>
+    </ul>
 
     {% if trips %}
     <!-- EDITORIAL GRID -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for trip in trips %}
         <!-- We use Alpine to filter by date simply by adding a data attribute, though normally done in backend -->
-        <div class="card group relative overflow-hidden h-80 flex flex-col justify-end city-card 
-             {% if forloop.first %}lg:col-span-2 lg:row-span-2 h-[40rem]{% endif %}"
+        <div class="col"
              x-show="tab === 'all' || (tab === 'upcoming' && '{{ trip.start_date|date:"Y-m-d" }}' >= new Date().toISOString().split('T')[0]) || (tab === 'past' && '{{ trip.start_date|date:"Y-m-d" }}' < new Date().toISOString().split('T')[0])"
              x-transition>
             
-            {% if trip.cover_photo %}
-                <img src="{{ trip.cover_photo.url }}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 city-image">
-            {% else %}
-                <div class="absolute inset-0 w-full h-full bg-[var(--ink)]-soft city-image flex items-center justify-center">
-                    <span class="font-display text-6xl opacity-10">✈️</span>
-                </div>
-            {% endif %}
-            
-            <div class="absolute inset-0 bg-gradient-to-t from-[var(--ink)] via-[rgba(10,14,26,0.6)] to-transparent opacity-90 transition-opacity city-overlay"></div>
-            
-            <div class="absolute top-4 right-4 z-10 flex gap-2">
-                {% if trip.is_public %}
-                    <span class="badge badge-teal backdrop-blur-md">Public</span>
+            <div class="card h-100 border-0 shadow-sm overflow-hidden text-white position-relative" style="min-height: 400px;">
+                {% if trip.cover_photo %}
+                    <img src="{{ trip.cover_photo.url }}" class="position-absolute w-100 h-100 object-fit-cover" style="transition: transform 1s ease;">
+                {% else %}
+                    <div class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center" style="background: var(--bs-tertiary-bg);">
+                        <i class="bi bi-airplane-engines display-1 text-secondary opacity-25"></i>
+                    </div>
                 {% endif %}
-                <span class="badge badge-gold backdrop-blur-md">
-                    {{ trip.start_date|date:"M d" }} — {{ trip.end_date|date:"M d, Y" }}
-                </span>
-            </div>
-
-            <div class="relative z-10 p-6 transform transition-transform duration-500">
-                <h3 class="font-display {% if forloop.first %}text-5xl{% else %}text-3xl{% endif %} font-medium text-[var(--text-primary)] mb-2">{{ trip.name }}</h3>
-                <div class="flex items-center gap-4 font-mono text-xs text-[var(--text-muted)] mb-4">
-                    <span>{{ trip.stops.count }} CITIES</span>
-                    <span>•</span>
-                    <span>{{ trip.duration_days }} DAYS</span>
-                    <span>•</span>
-                    <span>${{ trip.total_estimated_cost|floatformat:0 }} EST.</span>
-                </div>
                 
-                <!-- Action Buttons sliding up -->
-                <div class="flex gap-3 overflow-hidden absolute bottom-0 left-6 right-6 pb-6 translate-y-[150%] group-hover:translate-y-0 transition-transform duration-500">
-                    <a href="{% url 'trip_detail' trip.pk %}" class="btn-primary flex-1 !py-2">View</a>
-                    <a href="{% url 'itinerary_builder' trip.pk %}" class="btn-ghost !py-2 hover:bg-[rgba(255,255,255,0.1)]">Edit</a>
-                    <a href="{% url 'trip_delete' trip.pk %}" class="btn-ghost !py-2 !border-[rgba(239,68,68,0.3)] !text-red-500 hover:!bg-[rgba(239,68,68,0.1)] hover:!border-[var(--danger)]">Delete</a>
+                <div class="position-absolute w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);"></div>
+                
+                <div class="position-absolute top-0 end-0 mt-3 me-3 d-flex gap-2 z-1">
+                    {% if trip.is_public %}
+                        <span class="badge bg-info text-dark rounded-pill px-3 py-2 shadow-sm">Public</span>
+                    {% endif %}
+                    <span class="badge bg-primary text-dark rounded-pill px-3 py-2 shadow-sm">
+                        {{ trip.start_date|date:"M d" }} — {{ trip.end_date|date:"M d, Y" }}
+                    </span>
+                </div>
+
+                <div class="card-img-overlay d-flex flex-column justify-content-end p-4">
+                    <h3 class="font-display fs-2 fw-medium mb-2">{{ trip.name }}</h3>
+                    <div class="d-flex flex-wrap align-items-center gap-3 font-mono small text-light opacity-75 mb-4">
+                        <span>{{ trip.stops.count }} CITIES</span>
+                        <span>•</span>
+                        <span>{{ trip.duration_days }} DAYS</span>
+                        <span>•</span>
+                        <span>${{ trip.total_estimated_cost|floatformat:0 }} EST.</span>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'trip_detail' trip.pk %}" class="btn btn-primary flex-grow-1">View</a>
+                        <a href="{% url 'itinerary_builder' trip.pk %}" class="btn btn-light"><i class="bi bi-pencil"></i></a>
+                        <form method="post" action="{% url 'trip_delete' trip.pk %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger bg-dark border-0" onclick="return confirm('Delete this trip?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Spacer to push content up when hovering to make room for buttons -->
-            <div class="h-0 group-hover:h-12 transition-all duration-500"></div>
         </div>
         {% endfor %}
     </div>
     {% else %}
     <!-- Empty State -->
-    <div class="empty-state py-20">
-        <div class="empty-icon text-6xl mb-6 opacity-30">🌍</div>
-        <h3 class="font-display text-3xl font-light text-[var(--text-primary)] mb-2">Your passport is waiting.</h3>
-        <p class="font-body text-xs uppercase tracking-wider text-[var(--text-muted)] mb-8">No journeys match your criteria.</p>
-        <a href="{% url 'trip_create' %}" class="btn-primary">
-            Plan New Trip &rarr;
+    <div class="w-100 p-5 text-center bg-tertiary-bg rounded-4 border border-dashed mt-4">
+        <i class="bi bi-globe-americas display-3 text-secondary mb-3 d-block"></i>
+        <h3 class="font-display fs-3 mb-2">Your passport is waiting.</h3>
+        <p class="font-body small text-uppercase text-secondary mb-4" style="letter-spacing: 0.1em;">No journeys match your criteria.</p>
+        <a href="{% url 'trip_create' %}" class="btn btn-primary px-4 py-2">
+            Plan New Trip <i class="bi bi-arrow-right ms-1"></i>
         </a>
     </div>
     {% endif %}
